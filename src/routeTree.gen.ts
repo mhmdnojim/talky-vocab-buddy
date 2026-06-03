@@ -9,10 +9,16 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as UploadRouteImport } from './routes/upload'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LearnCategoryRouteImport } from './routes/learn.$category'
 import { Route as ApiTtsRouteImport } from './routes/api/tts'
 
+const UploadRoute = UploadRouteImport.update({
+  id: '/upload',
+  path: '/upload',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -31,36 +37,47 @@ const ApiTtsRoute = ApiTtsRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/upload': typeof UploadRoute
   '/api/tts': typeof ApiTtsRoute
   '/learn/$category': typeof LearnCategoryRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/upload': typeof UploadRoute
   '/api/tts': typeof ApiTtsRoute
   '/learn/$category': typeof LearnCategoryRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/upload': typeof UploadRoute
   '/api/tts': typeof ApiTtsRoute
   '/learn/$category': typeof LearnCategoryRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/tts' | '/learn/$category'
+  fullPaths: '/' | '/upload' | '/api/tts' | '/learn/$category'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/tts' | '/learn/$category'
-  id: '__root__' | '/' | '/api/tts' | '/learn/$category'
+  to: '/' | '/upload' | '/api/tts' | '/learn/$category'
+  id: '__root__' | '/' | '/upload' | '/api/tts' | '/learn/$category'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  UploadRoute: typeof UploadRoute
   ApiTtsRoute: typeof ApiTtsRoute
   LearnCategoryRoute: typeof LearnCategoryRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/upload': {
+      id: '/upload'
+      path: '/upload'
+      fullPath: '/upload'
+      preLoaderRoute: typeof UploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -87,6 +104,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  UploadRoute: UploadRoute,
   ApiTtsRoute: ApiTtsRoute,
   LearnCategoryRoute: LearnCategoryRoute,
 }

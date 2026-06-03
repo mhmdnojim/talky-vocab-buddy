@@ -1,4 +1,4 @@
-import { createFileRoute, Link, notFound, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
@@ -11,16 +11,24 @@ import {
   Volume2,
   Snail,
   Mic,
+  Loader2,
 } from "lucide-react";
 import {
   CATEGORIES,
   getByCategory,
   type Category,
-  type VocabWord,
 } from "@/data/vocabulary";
 import { speak } from "@/lib/speak";
+import { getCategoryBySlug, listWords } from "@/lib/customVocab";
 
-const VALID: Category[] = ["emergency", "greetings", "daily", "food", "travel"];
+const BUILTIN: Category[] = ["emergency", "greetings", "daily", "food", "travel"];
+
+interface DisplayWord {
+  id: string;
+  word: string;
+  ipa: string;
+  image: string | null;
+}
 
 export const Route = createFileRoute("/learn/$category")({
   head: ({ params }) => {
@@ -33,24 +41,10 @@ export const Route = createFileRoute("/learn/$category")({
           name: "description",
           content: `Learn ${cat?.label ?? "English"} vocabulary with cartoon pictures and natural pronunciation.`,
         },
-        { property: "og:title", content: `${title} - Learn with Voice` },
       ],
     };
   },
-  loader: ({ params }) => {
-    if (!VALID.includes(params.category as Category)) throw notFound();
-    return { category: params.category as Category };
-  },
-  notFoundComponent: () => (
-    <div className="flex min-h-screen items-center justify-center p-6 text-center">
-      <div>
-        <h1 className="text-xl font-semibold">Category not found</h1>
-        <Link to="/" className="mt-4 inline-block text-primary underline">
-          Back to categories
-        </Link>
-      </div>
-    </div>
-  ),
+  component: Learn,
   errorComponent: ({ error, reset }) => {
     const router = useRouter();
     return (
@@ -71,19 +65,73 @@ export const Route = createFileRoute("/learn/$category")({
       </div>
     );
   },
-  component: Learn,
+  notFoundComponent: () => (
+    <div className="flex min-h-screen items-center justify-center p-6 text-center">
+      <div>
+        <h1 className="text-xl font-semibold">Category not found</h1>
+        <Link to="/" className="mt-4 inline-block text-primary underline">
+          Back to categories
+        </Link>
+      </div>
+    </div>
+  ),
 });
 
 function Learn() {
-  const { category } = Route.useLoaderData();
-  const cat = CATEGORIES.find((c) => c.id === category)!;
-  const words = getByCategory(category);
+  const { category } = Route.useParams();
+  const [words, setWords] = useState<DisplayWord[] | null>(null);
+  const [title, setTitle] = useState<string>("Vocabulary");
+  const [loadError, setLoadError] = useState<string | null>(null);
+
   const [idx, setIdx] = useState(0);
   const [autoplay, setAutoplay] = useState(false);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const autoplayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Load favorites
+  // Load words (builtin or custom)
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        if (BUILTIN.includes(category as Category)) {
+          const cat = CATEGORIES.find((c) => c.id === category)!;
+          if (cancelled) return;
+          setTitle(cat.label);
+          setWords(
+            getByCategory(category as Category).map((w) => ({
+              id: w.id,
+              word: w.word,
+              ipa: w.ipa,
+              image: w.image,
+            })),
+          );
+        } else {
+          const cat = await getCategoryBySlug(category);
+          if (!cat) {
+            if (!cancelled) setLoadError("Category not found.");
+            return;
+          }
+          const rows = await listWords(cat.id);
+          if (cancelled) return;
+          setTitle(`${cat.emoji} ${cat.label}`);
+          setWords(
+            rows.map((r) => ({
+              id: r.id,
+              word: r.word,
+              ipa: r.ipa,
+              image: r.image_url,
+            })),
+          );
+        }
+      } catch (e: any) {
+        if (!cancelled) setLoadError(e?.message ?? "Failed to load");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [category]);
+
   useEffect(() => {
     try {
       const raw = localStorage.getItem("vocab-favs");
@@ -102,19 +150,18 @@ function Learn() {
     }
   };
 
-  const current = words[idx];
+  const current = words?.[idx];
 
   const go = (n: number) => {
+    if (!words || words.length === 0) return;
     setIdx((i) => (i + n + words.length) % words.length);
   };
 
-  // Auto-speak when card changes
   useEffect(() => {
     if (!current) return;
     void speak(current.word);
   }, [current?.id]);
 
-  // Autoplay
   useEffect(() => {
     if (!autoplay) return;
     let cancelled = false;
@@ -131,21 +178,19 @@ function Learn() {
     };
   }, [autoplay, idx]);
 
-  // Keyboard nav
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "ArrowLeft") go(-1);
       else if (e.key === "ArrowRight") go(1);
-      else if (e.key === " ") {
+      else if (e.key === " " && current) {
         e.preventDefault();
         void speak(current.word);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [current?.id]);
+  }, [current?.id, words?.length]);
 
-  // Swipe
   const touchStart = useRef<number | null>(null);
   const onTouchStart = (e: React.TouchEvent) => {
     touchStart.current = e.touches[0].clientX;
@@ -158,11 +203,33 @@ function Learn() {
   };
 
   const toggleFav = () => {
+    if (!current) return;
     const next = new Set(favorites);
     if (next.has(current.id)) next.delete(current.id);
     else next.add(current.id);
     persistFavs(next);
   };
+
+  if (loadError) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-6 text-center">
+        <div>
+          <p className="text-sm text-destructive">{loadError}</p>
+          <Link to="/" className="mt-4 inline-block text-primary underline">
+            Back
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!words) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (!current) {
     return (
@@ -179,7 +246,6 @@ function Learn() {
 
   return (
     <div className="flex min-h-screen flex-col bg-muted/40">
-      {/* Header */}
       <header className="flex items-center justify-between bg-primary px-4 py-4 text-primary-foreground shadow-md">
         <Link
           to="/"
@@ -188,7 +254,7 @@ function Learn() {
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
-        <h1 className="text-lg font-semibold">{cat.label}</h1>
+        <h1 className="truncate text-lg font-semibold">{title}</h1>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setAutoplay((v) => !v)}
@@ -206,14 +272,12 @@ function Learn() {
         </div>
       </header>
 
-      {/* Card */}
       <main className="mx-auto w-full max-w-xl flex-1 px-3 pb-8 pt-4">
         <div
           className="relative overflow-hidden rounded-2xl bg-card shadow-sm"
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
         >
-          {/* Star */}
           <button
             onClick={toggleFav}
             aria-label={isFav ? "Remove favorite" : "Add favorite"}
@@ -226,14 +290,18 @@ function Learn() {
             />
           </button>
 
-          {/* Image */}
           <div className="relative">
-            <img
-              src={current.image}
-              alt={current.word}
-              className="aspect-square w-full object-cover"
-            />
-            {/* Side arrows */}
+            {current.image ? (
+              <img
+                src={current.image}
+                alt={current.word}
+                className="aspect-square w-full object-cover"
+              />
+            ) : (
+              <div className="flex aspect-square w-full items-center justify-center bg-muted text-6xl">
+                ✨
+              </div>
+            )}
             <button
               onClick={() => go(-1)}
               className="absolute left-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full text-foreground/40 transition hover:text-foreground"
@@ -250,7 +318,6 @@ function Learn() {
             </button>
           </div>
 
-          {/* Word row */}
           <div className="flex items-center gap-3 px-5 py-4">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-muted-foreground">
               <span className="text-sm">👤</span>
@@ -259,15 +326,13 @@ function Learn() {
           </div>
         </div>
 
-        {/* Action buttons */}
-        <VoiceControls word={current} />
+        <VoiceControls word={current.word} />
 
-        {/* Big word + IPA */}
         <div className="mt-8 text-center">
           <div className="text-2xl font-semibold text-foreground">{current.word}</div>
-          <div className="mt-2 text-base text-muted-foreground">
-            [ {current.ipa} ]
-          </div>
+          {current.ipa && (
+            <div className="mt-2 text-base text-muted-foreground">[ {current.ipa} ]</div>
+          )}
           <div className="mt-2 text-xs text-muted-foreground">
             {idx + 1} / {words.length}
           </div>
@@ -277,13 +342,12 @@ function Learn() {
   );
 }
 
-function VoiceControls({ word }: { word: VocabWord }) {
+function VoiceControls({ word }: { word: string }) {
   const [recording, setRecording] = useState(false);
   return (
     <div className="mt-6 flex items-center justify-center gap-5">
       <button
         onClick={() => {
-          // Browser SpeechRecognition stub: just toggles UI for now.
           setRecording((v) => !v);
           setTimeout(() => setRecording(false), 1500);
         }}
@@ -295,14 +359,14 @@ function VoiceControls({ word }: { word: VocabWord }) {
         <Mic className="h-6 w-6 text-primary" />
       </button>
       <button
-        onClick={() => void speak(word.word)}
+        onClick={() => void speak(word)}
         className="flex h-14 w-14 items-center justify-center rounded-full bg-card shadow-md"
         aria-label="Play pronunciation"
       >
         <Volume2 className="h-6 w-6 text-primary" />
       </button>
       <button
-        onClick={() => void speak(word.word, { slow: true })}
+        onClick={() => void speak(word, { slow: true })}
         className="flex h-14 w-14 items-center justify-center rounded-full bg-card shadow-md"
         aria-label="Play slowly"
       >
