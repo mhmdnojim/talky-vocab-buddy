@@ -1,0 +1,313 @@
+import { createFileRoute, Link, notFound, useRouter } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
+import {
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  MoreVertical,
+  Play,
+  Pause,
+  Star,
+  Volume2,
+  Snail,
+  Mic,
+} from "lucide-react";
+import {
+  CATEGORIES,
+  getByCategory,
+  type Category,
+  type VocabWord,
+} from "@/data/vocabulary";
+import { speak } from "@/lib/speak";
+
+const VALID: Category[] = ["emergency", "greetings", "daily", "food", "travel"];
+
+export const Route = createFileRoute("/learn/$category")({
+  head: ({ params }) => {
+    const cat = CATEGORIES.find((c) => c.id === params.category);
+    const title = cat ? `${cat.label} Vocabulary` : "Vocabulary";
+    return {
+      meta: [
+        { title: `${title} - Learn with Voice` },
+        {
+          name: "description",
+          content: `Learn ${cat?.label ?? "English"} vocabulary with cartoon pictures and natural pronunciation.`,
+        },
+        { property: "og:title", content: `${title} - Learn with Voice` },
+      ],
+    };
+  },
+  loader: ({ params }) => {
+    if (!VALID.includes(params.category as Category)) throw notFound();
+    return { category: params.category as Category };
+  },
+  notFoundComponent: () => (
+    <div className="flex min-h-screen items-center justify-center p-6 text-center">
+      <div>
+        <h1 className="text-xl font-semibold">Category not found</h1>
+        <Link to="/" className="mt-4 inline-block text-primary underline">
+          Back to categories
+        </Link>
+      </div>
+    </div>
+  ),
+  errorComponent: ({ error, reset }) => {
+    const router = useRouter();
+    return (
+      <div className="flex min-h-screen items-center justify-center p-6 text-center">
+        <div>
+          <h1 className="text-xl font-semibold">Something went wrong</h1>
+          <p className="mt-2 text-sm text-muted-foreground">{error.message}</p>
+          <button
+            onClick={() => {
+              router.invalidate();
+              reset();
+            }}
+            className="mt-4 rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground"
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    );
+  },
+  component: Learn,
+});
+
+function Learn() {
+  const { category } = Route.useLoaderData();
+  const cat = CATEGORIES.find((c) => c.id === category)!;
+  const words = getByCategory(category);
+  const [idx, setIdx] = useState(0);
+  const [autoplay, setAutoplay] = useState(false);
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const autoplayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Load favorites
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("vocab-favs");
+      if (raw) setFavorites(new Set(JSON.parse(raw) as string[]));
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const persistFavs = (next: Set<string>) => {
+    setFavorites(next);
+    try {
+      localStorage.setItem("vocab-favs", JSON.stringify([...next]));
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const current = words[idx];
+
+  const go = (n: number) => {
+    setIdx((i) => (i + n + words.length) % words.length);
+  };
+
+  // Auto-speak when card changes
+  useEffect(() => {
+    if (!current) return;
+    void speak(current.word);
+  }, [current?.id]);
+
+  // Autoplay
+  useEffect(() => {
+    if (!autoplay) return;
+    let cancelled = false;
+    (async () => {
+      await new Promise<void>((r) => {
+        autoplayRef.current = setTimeout(r, 2500);
+      });
+      if (cancelled) return;
+      go(1);
+    })();
+    return () => {
+      cancelled = true;
+      if (autoplayRef.current) clearTimeout(autoplayRef.current);
+    };
+  }, [autoplay, idx]);
+
+  // Keyboard nav
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") go(-1);
+      else if (e.key === "ArrowRight") go(1);
+      else if (e.key === " ") {
+        e.preventDefault();
+        void speak(current.word);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [current?.id]);
+
+  // Swipe
+  const touchStart = useRef<number | null>(null);
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStart.current = e.touches[0].clientX;
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (touchStart.current == null) return;
+    const dx = e.changedTouches[0].clientX - touchStart.current;
+    if (Math.abs(dx) > 50) go(dx > 0 ? -1 : 1);
+    touchStart.current = null;
+  };
+
+  const toggleFav = () => {
+    const next = new Set(favorites);
+    if (next.has(current.id)) next.delete(current.id);
+    else next.add(current.id);
+    persistFavs(next);
+  };
+
+  if (!current) {
+    return (
+      <div className="p-6 text-center">
+        No words in this category yet.
+        <Link to="/" className="ml-2 text-primary underline">
+          Go back
+        </Link>
+      </div>
+    );
+  }
+
+  const isFav = favorites.has(current.id);
+
+  return (
+    <div className="flex min-h-screen flex-col bg-muted/40">
+      {/* Header */}
+      <header className="flex items-center justify-between bg-primary px-4 py-4 text-primary-foreground shadow-md">
+        <Link
+          to="/"
+          className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-primary-foreground/80"
+          aria-label="Back"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Link>
+        <h1 className="text-lg font-semibold">{cat.label}</h1>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setAutoplay((v) => !v)}
+            className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-primary-foreground/80"
+            aria-label={autoplay ? "Pause autoplay" : "Start autoplay"}
+          >
+            {autoplay ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 fill-current" />}
+          </button>
+          <button
+            className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-primary-foreground/80"
+            aria-label="More"
+          >
+            <MoreVertical className="h-5 w-5" />
+          </button>
+        </div>
+      </header>
+
+      {/* Card */}
+      <main className="mx-auto w-full max-w-xl flex-1 px-3 pb-8 pt-4">
+        <div
+          className="relative overflow-hidden rounded-2xl bg-card shadow-sm"
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+        >
+          {/* Star */}
+          <button
+            onClick={toggleFav}
+            aria-label={isFav ? "Remove favorite" : "Add favorite"}
+            className="absolute right-3 top-3 z-10"
+          >
+            <Star
+              className={`h-7 w-7 transition ${
+                isFav ? "fill-primary text-primary" : "text-primary"
+              }`}
+            />
+          </button>
+
+          {/* Image */}
+          <div className="relative">
+            <img
+              src={current.image}
+              alt={current.word}
+              className="aspect-square w-full object-cover"
+            />
+            {/* Side arrows */}
+            <button
+              onClick={() => go(-1)}
+              className="absolute left-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full text-foreground/40 transition hover:text-foreground"
+              aria-label="Previous"
+            >
+              <ChevronLeft className="h-9 w-9" />
+            </button>
+            <button
+              onClick={() => go(1)}
+              className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full text-foreground/40 transition hover:text-foreground"
+              aria-label="Next"
+            >
+              <ChevronRight className="h-9 w-9" />
+            </button>
+          </div>
+
+          {/* Word row */}
+          <div className="flex items-center gap-3 px-5 py-4">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-muted-foreground">
+              <span className="text-sm">👤</span>
+            </div>
+            <span className="text-xl font-medium">{current.word}</span>
+          </div>
+        </div>
+
+        {/* Action buttons */}
+        <VoiceControls word={current} />
+
+        {/* Big word + IPA */}
+        <div className="mt-8 text-center">
+          <div className="text-2xl font-semibold text-foreground">{current.word}</div>
+          <div className="mt-2 text-base text-muted-foreground">
+            [ {current.ipa} ]
+          </div>
+          <div className="mt-2 text-xs text-muted-foreground">
+            {idx + 1} / {words.length}
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+function VoiceControls({ word }: { word: VocabWord }) {
+  const [recording, setRecording] = useState(false);
+  return (
+    <div className="mt-6 flex items-center justify-center gap-5">
+      <button
+        onClick={() => {
+          // Browser SpeechRecognition stub: just toggles UI for now.
+          setRecording((v) => !v);
+          setTimeout(() => setRecording(false), 1500);
+        }}
+        className={`flex h-14 w-14 items-center justify-center rounded-full bg-card shadow-md transition ${
+          recording ? "ring-4 ring-primary/40" : ""
+        }`}
+        aria-label="Practice pronunciation"
+      >
+        <Mic className="h-6 w-6 text-primary" />
+      </button>
+      <button
+        onClick={() => void speak(word.word)}
+        className="flex h-14 w-14 items-center justify-center rounded-full bg-card shadow-md"
+        aria-label="Play pronunciation"
+      >
+        <Volume2 className="h-6 w-6 text-primary" />
+      </button>
+      <button
+        onClick={() => void speak(word.word, { slow: true })}
+        className="flex h-14 w-14 items-center justify-center rounded-full bg-card shadow-md"
+        aria-label="Play slowly"
+      >
+        <Snail className="h-6 w-6 text-primary" />
+      </button>
+    </div>
+  );
+}
