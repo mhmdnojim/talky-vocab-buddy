@@ -95,6 +95,7 @@ function Learn() {
   const [idx, setIdx] = useState(0);
   const [autoplay, setAutoplay] = useState(false);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [reloadKey, setReloadKey] = useState(0);
   const autoplayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [targetLang, setTargetLang] = useState<string>(() => {
