@@ -118,12 +118,40 @@ function Home() {
       <main className="mx-auto max-w-2xl px-4 pt-6">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-foreground">Categories</h2>
-          <Link
-            to="/upload"
-            className="flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
-          >
-            <Plus className="h-3.5 w-3.5" /> Add from file
-          </Link>
+          <div className="flex items-center gap-2">
+            <div className="relative" ref={exportRef}>
+              <button
+                onClick={() => setExportOpen((v) => !v)}
+                className="flex items-center gap-1 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm transition hover:bg-muted"
+              >
+                <Download className="h-3.5 w-3.5" /> Export
+              </button>
+              {exportOpen && (
+                <div className="absolute right-0 top-full z-10 mt-1 w-40 rounded-xl border border-border bg-card p-1 shadow-lg">
+                  <button
+                    onClick={() => doExport("csv")}
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition hover:bg-muted"
+                  >
+                    <FileSpreadsheet className="h-4 w-4 text-green-600" />
+                    Download CSV
+                  </button>
+                  <button
+                    onClick={() => doExport("json")}
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition hover:bg-muted"
+                  >
+                    <FileJson className="h-4 w-4 text-amber-600" />
+                    Download JSON
+                  </button>
+                </div>
+              )}
+            </div>
+            <Link
+              to="/upload"
+              className="flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
+            >
+              <Plus className="h-3.5 w-3.5" /> Add from file
+            </Link>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
