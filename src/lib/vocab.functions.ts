@@ -87,6 +87,38 @@ export const extractWordsFromText = createServerFn({ method: "POST" })
     return { words };
   });
 
+const TopicInput = z.object({
+  topic: z.string().min(1).max(200),
+  count: z.number().min(1).max(200).default(20),
+});
+
+export const generateWordsForTopic = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => TopicInput.parse(input))
+  .handler(async ({ data }) => {
+    const prompt = `Generate ${data.count} useful English vocabulary words or short phrases (1-3 words) for the topic/field: "${data.topic}". Return ONLY strict JSON: {"words":[{"word":"...","ipa":"..."}]}. Include accurate IPA. No duplicates, no numbering, no extra prose.`;
+    const result = await callLovableAI({
+      model: "google/gemini-2.5-flash",
+      messages: [
+        { role: "system", content: "You output only valid JSON. No prose." },
+        { role: "user", content: prompt },
+      ],
+      response_format: { type: "json_object" },
+    });
+    const content = result?.choices?.[0]?.message?.content ?? "{}";
+    let parsed: { words?: { word: string; ipa?: string }[] };
+    try {
+      parsed = JSON.parse(content);
+    } catch {
+      const m = content.match(/\{[\s\S]*\}/);
+      parsed = m ? JSON.parse(m[0]) : { words: [] };
+    }
+    const words = (parsed.words ?? [])
+      .filter((w) => w && typeof w.word === "string" && w.word.trim().length > 0)
+      .slice(0, data.count)
+      .map((w) => ({ word: w.word.trim(), ipa: (w.ipa ?? "").trim() }));
+    return { words };
+  });
+
 const ImageInput = z.object({ word: z.string().min(1).max(120) });
 
 export const generateVocabImage = createServerFn({ method: "POST" })
