@@ -7,6 +7,38 @@ const ExtractInput = z.object({
   maxWords: z.number().min(1).max(200).default(50),
 });
 
+const TranslateInput = z.object({
+  words: z.array(z.string().min(1).max(120)).min(1).max(60),
+  targetLang: z.string().min(2).max(40),
+});
+
+export const translateWords = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => TranslateInput.parse(input))
+  .handler(async ({ data }) => {
+    const list = data.words.map((w, i) => `${i + 1}. ${w}`).join("\n");
+    const prompt = `Detect the source language, then translate each item to ${data.targetLang}. Return ONLY strict JSON: {"sourceLang":"<language name in English>","translations":["t1","t2",...]} in the SAME order. Keep translations short (1-4 words). Do not add notes.\n\nITEMS:\n${list}`;
+    const result = await callLovableAI({
+      model: "google/gemini-2.5-flash",
+      messages: [
+        { role: "system", content: "You output only valid JSON. No prose." },
+        { role: "user", content: prompt },
+      ],
+      response_format: { type: "json_object" },
+    });
+    const content = result?.choices?.[0]?.message?.content ?? "{}";
+    let parsed: { sourceLang?: string; translations?: string[] };
+    try {
+      parsed = JSON.parse(content);
+    } catch {
+      const m = content.match(/\{[\s\S]*\}/);
+      parsed = m ? JSON.parse(m[0]) : {};
+    }
+    return {
+      sourceLang: parsed.sourceLang ?? "Unknown",
+      translations: (parsed.translations ?? []).slice(0, data.words.length),
+    };
+  });
+
 async function callLovableAI(body: unknown): Promise<any> {
   const key = process.env.LOVABLE_API_KEY;
   if (!key) throw new Error("LOVABLE_API_KEY missing");

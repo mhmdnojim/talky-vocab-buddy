@@ -4,7 +4,7 @@ import {
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
-  MoreVertical,
+  
   Play,
   Pause,
   Star,
@@ -12,6 +12,7 @@ import {
   Snail,
   Mic,
   Loader2,
+  RefreshCw,
 } from "lucide-react";
 import {
   CATEGORIES,
@@ -19,7 +20,15 @@ import {
   type Category,
 } from "@/data/vocabulary";
 import { speak } from "@/lib/speak";
-import { getCategoryBySlug, listWords } from "@/lib/customVocab";
+import { getCategoryBySlug, listWords, updateWordImage } from "@/lib/customVocab";
+import { generateVocabImage, translateWords } from "@/lib/vocab.functions";
+import { useServerFn } from "@tanstack/react-start";
+
+const LANGUAGES = [
+  "Arabic", "Spanish", "French", "German", "Italian", "Portuguese",
+  "Russian", "Chinese", "Japanese", "Korean", "Hindi", "Turkish",
+  "Dutch", "Polish", "Swedish", "English",
+];
 
 const BUILTIN: Category[] = ["emergency", "greetings", "daily", "food", "travel"];
 
@@ -87,6 +96,78 @@ function Learn() {
   const [autoplay, setAutoplay] = useState(false);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const autoplayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const [targetLang, setTargetLang] = useState<string>(() => {
+    if (typeof window === "undefined") return "Arabic";
+    return localStorage.getItem("vocab-target-lang") || "Arabic";
+  });
+  const [translations, setTranslations] = useState<Record<string, string>>({});
+  const [translating, setTranslating] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
+  const translate = useServerFn(translateWords);
+  const regenImage = useServerFn(generateVocabImage);
+
+  // Translate all words when words or language changes
+  useEffect(() => {
+    if (!words || words.length === 0) return;
+    let cancelled = false;
+    setTranslations({});
+    setTranslating(true);
+    (async () => {
+      try {
+        const wordsList = words.map((w) => w.word);
+        const res = await translate({ data: { words: wordsList, targetLang } });
+        if (cancelled) return;
+        const map: Record<string, string> = {};
+        wordsList.forEach((w, i) => {
+          if (res.translations[i]) map[w] = res.translations[i];
+        });
+        setTranslations(map);
+      } catch {
+        /* ignore */
+      } finally {
+        if (!cancelled) setTranslating(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [words, targetLang]);
+
+  const changeLang = (lang: string) => {
+    setTargetLang(lang);
+    try {
+      localStorage.setItem("vocab-target-lang", lang);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const handleRegenerate = async () => {
+    if (!words || regenerating) return;
+    const cur = words[idx];
+    if (!cur) return;
+    setRegenerating(true);
+    try {
+      const res = await regenImage({ data: { word: cur.word } });
+      const newImage = res.dataUrl;
+      setWords((prev) =>
+        prev ? prev.map((w, i) => (i === idx ? { ...w, image: newImage } : w)) : prev,
+      );
+      // Persist for custom words (UUIDs)
+      if (/^[0-9a-f-]{36}$/i.test(cur.id)) {
+        try {
+          await updateWordImage(cur.id, newImage);
+        } catch {
+          /* ignore */
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setRegenerating(false);
+    }
+  };
 
   // Load words (builtin or custom)
   useEffect(() => {
@@ -263,12 +344,18 @@ function Learn() {
           >
             {autoplay ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 fill-current" />}
           </button>
-          <button
-            className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-primary-foreground/80"
-            aria-label="More"
+          <select
+            value={targetLang}
+            onChange={(e) => changeLang(e.target.value)}
+            className="h-9 rounded-full border-2 border-primary-foreground/80 bg-primary px-2 text-xs font-medium text-primary-foreground focus:outline-none"
+            aria-label="Translation language"
           >
-            <MoreVertical className="h-5 w-5" />
-          </button>
+            {LANGUAGES.map((l) => (
+              <option key={l} value={l} className="text-foreground">
+                {l}
+              </option>
+            ))}
+          </select>
         </div>
       </header>
 
@@ -288,6 +375,15 @@ function Learn() {
                 isFav ? "fill-primary text-primary" : "text-primary"
               }`}
             />
+          </button>
+
+          <button
+            onClick={handleRegenerate}
+            disabled={regenerating}
+            aria-label="Regenerate image"
+            className="absolute left-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-card/90 text-primary shadow-md backdrop-blur transition hover:bg-card disabled:opacity-60"
+          >
+            <RefreshCw className={`h-4 w-4 ${regenerating ? "animate-spin" : ""}`} />
           </button>
 
           <div className="relative">
@@ -322,7 +418,14 @@ function Learn() {
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-muted-foreground">
               <span className="text-sm">👤</span>
             </div>
-            <span className="text-xl font-medium">{current.word}</span>
+            <div className="flex flex-col">
+              <span className="text-xl font-medium leading-tight">{current.word}</span>
+              {translations[current.word] && (
+                <span className="text-xs text-muted-foreground" dir="auto">
+                  {translations[current.word]}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
@@ -333,6 +436,13 @@ function Learn() {
           {current.ipa && (
             <div className="mt-2 text-base text-muted-foreground">[ {current.ipa} ]</div>
           )}
+          <div className="mt-1 min-h-[1.25rem] text-sm text-muted-foreground" dir="auto">
+            {translations[current.word]
+              ? translations[current.word]
+              : translating
+                ? "…"
+                : ""}
+          </div>
           <div className="mt-2 text-xs text-muted-foreground">
             {idx + 1} / {words.length}
           </div>
