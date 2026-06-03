@@ -453,10 +453,17 @@ function Learn() {
               <span className="text-sm">👤</span>
             </div>
             <div className="flex flex-col">
-              <span className="text-xl font-medium leading-tight">{current.word}</span>
+              <RubyText
+                text={current.word}
+                pinyin={sourcePinyin[current.word]}
+                className="text-xl font-medium leading-tight"
+              />
               {translations[current.word] && (
                 <span className="text-xs text-muted-foreground" dir="auto">
-                  {translations[current.word]}
+                  <RubyText
+                    text={translations[current.word]}
+                    pinyin={translationPinyin[current.word]}
+                  />
                 </span>
               )}
             </div>
@@ -466,16 +473,43 @@ function Learn() {
         <VoiceControls word={current.word} />
 
         <div className="mt-8 text-center">
-          <div className="text-2xl font-semibold text-foreground">{current.word}</div>
+          <div className="text-2xl font-semibold text-foreground">
+            <RubyText
+              text={current.word}
+              pinyin={sourcePinyin[current.word]}
+            />
+          </div>
           {current.ipa && (
             <div className="mt-2 text-base text-muted-foreground">[ {current.ipa} ]</div>
           )}
-          <div className="mt-1 min-h-[1.25rem] text-sm text-muted-foreground" dir="auto">
-            {translations[current.word]
-              ? translations[current.word]
-              : translating
-                ? "…"
-                : ""}
+          <div
+            className="mt-1 flex min-h-[1.75rem] items-center justify-center gap-2 text-sm text-muted-foreground"
+            dir="auto"
+          >
+            {translations[current.word] ? (
+              <>
+                <RubyText
+                  text={translations[current.word]}
+                  pinyin={translationPinyin[current.word]}
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    void speak(translations[current.word], {
+                      lang: langLabelToBcp47(targetLang),
+                    })
+                  }
+                  className="flex h-7 w-7 items-center justify-center rounded-full bg-card text-primary shadow-sm transition hover:bg-muted"
+                  aria-label={`Play translation in ${targetLang}`}
+                >
+                  <Volume2 className="h-3.5 w-3.5" />
+                </button>
+              </>
+            ) : translating ? (
+              "…"
+            ) : (
+              ""
+            )}
           </div>
           <div className="mt-4 px-2">
             <input
