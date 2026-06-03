@@ -14,16 +14,22 @@ export const Route = createFileRoute("/api/tts")({
           return new Response("ElevenLabs not configured", { status: 503 });
         }
 
-        let body: { text?: string };
+        let body: { text?: string; lang?: string };
         try {
-          body = (await request.json()) as { text?: string };
+          body = (await request.json()) as { text?: string; lang?: string };
         } catch {
           return new Response("Invalid JSON", { status: 400 });
         }
         const text = (body.text || "").trim();
+        const lang = (body.lang || "en-US").toLowerCase();
         if (!text || text.length > 200) {
           return new Response("Invalid text", { status: 400 });
         }
+        // Use the multilingual model for anything that isn't plain English so
+        // Chinese / Arabic / etc. are pronounced correctly.
+        const model_id = lang.startsWith("en")
+          ? "eleven_turbo_v2_5"
+          : "eleven_multilingual_v2";
 
         const upstream = await fetch(
           `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}?output_format=mp3_44100_128`,
@@ -35,7 +41,7 @@ export const Route = createFileRoute("/api/tts")({
             },
             body: JSON.stringify({
               text,
-              model_id: "eleven_turbo_v2_5",
+              model_id,
               voice_settings: {
                 stability: 0.5,
                 similarity_boost: 0.75,
