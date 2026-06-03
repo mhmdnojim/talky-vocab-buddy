@@ -371,11 +371,27 @@ function UploadPage() {
           )}
         </form>
 
-        {progress.length > 0 && (
+        {progress.length > 0 && (() => {
+          const doneCount = progress.filter((p) => p.status === "done").length;
+          const failedCount = progress.filter((p) => p.status === "failed").length;
+          const pct = Math.round(((doneCount + failedCount) / progress.length) * 100);
+          return (
           <div className="mt-6 rounded-xl border-2 border-border bg-card p-4">
-            <div className="mb-2 text-sm font-medium">
-              Progress: {progress.filter((p) => p.status === "done").length} /{" "}
-              {progress.length}
+            <div className="mb-2 flex items-center justify-between text-sm font-medium">
+              <span>Progress: {doneCount} / {progress.length}</span>
+              <span className="text-muted-foreground">{pct}%</span>
+            </div>
+            <div
+              role="progressbar"
+              aria-valuenow={pct}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              className="mb-3 h-2 w-full overflow-hidden rounded-full bg-muted"
+            >
+              <div
+                className="h-full bg-primary transition-all duration-300"
+                style={{ width: `${pct}%` }}
+              />
             </div>
             <ul className="max-h-72 space-y-1 overflow-y-auto text-sm">
               {progress.map((p, i) => {
@@ -408,7 +424,8 @@ function UploadPage() {
               })}
             </ul>
           </div>
-        )}
+          );
+        })()}
       </main>
     </div>
   );
