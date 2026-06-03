@@ -134,3 +134,71 @@ export async function nextWordPosition(category_id: string): Promise<number> {
   if (error) throw error;
   return ((data?.[0]?.position ?? -1) as number) + 1;
 }
+
+export async function exportAllUserData() {
+  const { data: categories, error: catErr } = await supabase
+    .from("custom_categories")
+    .select("id, slug, label, emoji, created_at")
+    .order("created_at", { ascending: false });
+  if (catErr) throw catErr;
+
+  const { data: words, error: wordErr } = await supabase
+    .from("custom_words")
+    .select("id, category_id, word, ipa, image_url, position, created_at")
+    .order("position", { ascending: true });
+  if (wordErr) throw wordErr;
+
+  const catMap = new Map((categories ?? []).map((c) => [c.id, c]));
+  const wordsWithCat = (words ?? []).map((w) => {
+    const cat = catMap.get(w.category_id);
+    return { ...w, category_slug: cat?.slug ?? "", category_label: cat?.label ?? "" };
+  });
+
+  return { categories: categories ?? [], words: wordsWithCat };
+}
+
+function escapeCsvCell(v: string): string {
+  if (/[",\n\r]/.test(v)) return `"${v.replace(/"/g, "\"\"")}"`;
+  return v;
+}
+
+export function buildCsv(categories: CustomCategory[], words: (CustomWord & { category_slug: string; category_label: string })[]): string {
+  const headers = ["category_label", "category_slug", "word", "ipa", "image_url", "position"];
+  const rows = words.map((w) => [
+    w.category_label,
+    w.category_slug,
+    w.word,
+    w.ipa,
+    w.image_url ?? "",
+    String(w.position),
+  ]);
+  return [headers.join(","), ...rows.map((r) => r.map(escapeCsvCell).join(","))].join("\n");
+}
+
+export function buildJson(categories: CustomCategory[], words: (CustomWord & { category_slug: string; category_label: string })[]): string {
+  const catMap = new Map(categories.map((c) => [c.id, c]));
+  const result = categories.map((c) => ({
+    ...c,
+    words: words
+      .filter((w) => w.category_id === c.id)
+      .map((w) => ({
+        word: w.word,
+        ipa: w.ipa,
+        image_url: w.image_url,
+        position: w.position,
+      })),
+  }));
+  return JSON.stringify(result, null, 2);
+}
+
+export function downloadFile(content: string, filename: string, mime: string) {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}

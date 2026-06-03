@@ -1,11 +1,15 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Plus, Trash2, LogOut } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { Plus, Trash2, LogOut, Download, FileSpreadsheet, FileJson } from "lucide-react";
 import { CATEGORIES, VOCABULARY } from "@/data/vocabulary";
 import {
   deleteCategory,
   listCategories,
   type CustomCategory,
+  exportAllUserData,
+  buildCsv,
+  buildJson,
+  downloadFile,
 } from "@/lib/customVocab";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -33,6 +37,8 @@ function Home() {
   const navigate = useNavigate();
   const [customCats, setCustomCats] = useState<CustomCategory[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
+  const [exportOpen, setExportOpen] = useState(false);
+  const exportRef = useRef<HTMLDivElement>(null);
 
   const reload = async () => {
     const cats = await listCategories();
@@ -54,10 +60,36 @@ function Home() {
     void reload();
   }, []);
 
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (exportRef.current && !exportRef.current.contains(e.target as Node)) {
+        setExportOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const removeCat = async (id: string) => {
     if (!confirm("Delete this category and all its words?")) return;
     await deleteCategory(id);
     void reload();
+  };
+
+  const doExport = async (format: "csv" | "json") => {
+    setExportOpen(false);
+    try {
+      const { categories, words } = await exportAllUserData();
+      if (format === "csv") {
+        const csv = buildCsv(categories, words);
+        downloadFile(csv, "vocabulary.csv", "text/csv;charset=utf-8;");
+      } else {
+        const json = buildJson(categories, words);
+        downloadFile(json, "vocabulary.json", "application/json;charset=utf-8;");
+      }
+    } catch {
+      alert("Export failed. Please try again.");
+    }
   };
 
   return (
@@ -86,12 +118,40 @@ function Home() {
       <main className="mx-auto max-w-2xl px-4 pt-6">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-foreground">Categories</h2>
-          <Link
-            to="/upload"
-            className="flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
-          >
-            <Plus className="h-3.5 w-3.5" /> Add from file
-          </Link>
+          <div className="flex items-center gap-2">
+            <div className="relative" ref={exportRef}>
+              <button
+                onClick={() => setExportOpen((v) => !v)}
+                className="flex items-center gap-1 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm transition hover:bg-muted"
+              >
+                <Download className="h-3.5 w-3.5" /> Export
+              </button>
+              {exportOpen && (
+                <div className="absolute right-0 top-full z-10 mt-1 w-40 rounded-xl border border-border bg-card p-1 shadow-lg">
+                  <button
+                    onClick={() => doExport("csv")}
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition hover:bg-muted"
+                  >
+                    <FileSpreadsheet className="h-4 w-4 text-green-600" />
+                    Download CSV
+                  </button>
+                  <button
+                    onClick={() => doExport("json")}
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition hover:bg-muted"
+                  >
+                    <FileJson className="h-4 w-4 text-amber-600" />
+                    Download JSON
+                  </button>
+                </div>
+              )}
+            </div>
+            <Link
+              to="/upload"
+              className="flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
+            >
+              <Plus className="h-3.5 w-3.5" /> Add from file
+            </Link>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
