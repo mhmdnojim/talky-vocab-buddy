@@ -247,8 +247,9 @@ function UploadPage() {
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="flex gap-3">
             <div className="flex-1">
-              <label className="mb-1 block text-sm font-medium">Category name</label>
+              <label htmlFor="category-name" className="mb-1 block text-sm font-medium">Category name</label>
               <input
+                id="category-name"
                 type="text"
                 value={label}
                 onChange={(e) => setLabel(e.target.value)}
@@ -259,8 +260,9 @@ function UploadPage() {
               />
             </div>
             <div className="w-20">
-              <label className="mb-1 block text-sm font-medium">Emoji</label>
+              <label htmlFor="category-emoji" className="mb-1 block text-sm font-medium">Emoji</label>
               <input
+                id="category-emoji"
                 type="text"
                 value={emoji}
                 onChange={(e) => setEmoji(e.target.value.slice(0, 4))}
@@ -272,10 +274,11 @@ function UploadPage() {
 
           {mode === "topic" && (
             <div>
-              <label className="mb-1 block text-sm font-medium">
+              <label htmlFor="topic-input" className="mb-1 block text-sm font-medium">
                 Topic / field
               </label>
               <input
+                id="topic-input"
                 type="text"
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
@@ -287,11 +290,12 @@ function UploadPage() {
           )}
 
           <div>
-            <label className="mb-1 block text-sm font-medium">
+            <label htmlFor="max-total" className="mb-1 block text-sm font-medium">
               {mode === "file" ? "Max words to extract" : "Total words to generate"}{" "}
               ({maxTotal})
             </label>
             <input
+              id="max-total"
               type="range"
               min={5}
               max={mode === "file" ? 3000 : 2000}
@@ -304,10 +308,11 @@ function UploadPage() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium">
+            <label htmlFor="max-per-batch" className="mb-1 block text-sm font-medium">
               Words per category (batch size) ({maxPerBatch})
             </label>
             <input
+              id="max-per-batch"
               type="range"
               min={5}
               max={60}
