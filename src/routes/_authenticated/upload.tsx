@@ -424,7 +424,8 @@ function UploadPage() {
               })}
             </ul>
           </div>
-        )}
+          );
+        })()}
       </main>
     </div>
   );
