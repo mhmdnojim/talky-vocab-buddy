@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Plus, Trash2, LogOut } from "lucide-react";
+import { Plus, Trash2, LogOut, Download } from "lucide-react";
 import { CATEGORIES, VOCABULARY } from "@/data/vocabulary";
 import {
   deleteCategory,
