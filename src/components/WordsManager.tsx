@@ -137,23 +137,35 @@ export function WordsManager({ currentCategorySlug, onChanged }: Props) {
           >
             {cats.map((c) => (
               <AccordionItem key={c.slug} value={c.slug}>
-                <AccordionTrigger className="px-2 py-3 hover:no-underline">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">{c.emoji}</span>
-                    <span className="font-medium">{c.label}</span>
-                    <span className="text-xs text-muted-foreground">
-                      ({wordsByCat[c.slug]?.length ?? 0})
-                    </span>
-                    {c.slug === currentCategorySlug && (
-                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
-                        current
+                <div className="flex items-center gap-1">
+                  <AccordionTrigger className="flex-1 px-2 py-3 hover:no-underline">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">{c.emoji}</span>
+                      <span className="font-medium">{c.label}</span>
+                      <span className="text-xs text-muted-foreground">
+                        ({wordsByCat[c.slug]?.length ?? 0})
                       </span>
-                    )}
-                    {!c.isCustom && (
-                      <Lock className="h-3 w-3 text-muted-foreground" />
-                    )}
-                  </div>
-                </AccordionTrigger>
+                      {c.slug === currentCategorySlug && (
+                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                          current
+                        </span>
+                      )}
+                      {!c.isCustom && (
+                        <Lock className="h-3 w-3 text-muted-foreground" />
+                      )}
+                    </div>
+                  </AccordionTrigger>
+                  {c.isCustom && c.customId && (
+                    <DeleteCategoryButton
+                      categoryId={c.customId}
+                      label={c.label}
+                      onDeleted={async () => {
+                        await refresh();
+                        onChanged?.();
+                      }}
+                    />
+                  )}
+                </div>
                 <AccordionContent className="space-y-1 px-2 pb-3">
                   {(wordsByCat[c.slug] ?? []).map((w) => (
                     <WordRow
