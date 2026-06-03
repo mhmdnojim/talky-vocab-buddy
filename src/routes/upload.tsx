@@ -288,7 +288,7 @@ function UploadPage() {
             <input
               type="range"
               min={5}
-              max={200}
+              max={mode === "file" ? 3000 : 2000}
               step={5}
               value={maxTotal}
               onChange={(e) => setMaxTotal(Number(e.target.value))}

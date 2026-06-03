@@ -4,7 +4,7 @@ import { z } from "zod";
 
 const ExtractInput = z.object({
   text: z.string().min(1).max(200_000),
-  maxWords: z.number().min(1).max(200).default(50),
+  maxWords: z.number().min(1).max(3000).default(50),
 });
 
 const TranslateInput = z.object({
@@ -89,7 +89,7 @@ export const extractWordsFromText = createServerFn({ method: "POST" })
 
 const TopicInput = z.object({
   topic: z.string().min(1).max(200),
-  count: z.number().min(1).max(200).default(20),
+  count: z.number().min(1).max(2000).default(20),
 });
 
 export const generateWordsForTopic = createServerFn({ method: "POST" })
