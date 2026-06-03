@@ -104,14 +104,34 @@ function AuthPage() {
             : "Sign up to start building your decks."}
         </p>
 
-        <button
-          type="button"
-          onClick={onGoogle}
-          disabled={loading}
-          className="mt-5 flex w-full items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent disabled:opacity-50"
-        >
-          Continue with Google
-        </button>
+        <div className="mt-5 flex items-center justify-center gap-3">
+          <button
+            type="button"
+            onClick={onGoogle}
+            disabled={loading}
+            title="Sign in with Google"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-input bg-background transition-colors hover:bg-accent disabled:opacity-50"
+          >
+            <GoogleIcon />
+          </button>
+          <button
+            type="button"
+            onClick={onGoogle}
+            disabled={loading}
+            title="Sign in with YouTube (Google account)"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-input bg-background transition-colors hover:bg-accent disabled:opacity-50"
+          >
+            <YouTubeIcon />
+          </button>
+          <button
+            type="button"
+            disabled
+            title="Coursera sign-in is not available"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-input bg-background opacity-40 cursor-not-allowed"
+          >
+            <CourseraIcon />
+          </button>
+        </div>
 
         <div className="my-4 flex items-center gap-2 text-xs text-muted-foreground">
           <div className="h-px flex-1 bg-border" />
