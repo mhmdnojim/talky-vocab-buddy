@@ -12,6 +12,7 @@ import {
   Snail,
   Mic,
   Loader2,
+  RefreshCw,
 } from "lucide-react";
 import {
   CATEGORIES,
@@ -19,7 +20,15 @@ import {
   type Category,
 } from "@/data/vocabulary";
 import { speak } from "@/lib/speak";
-import { getCategoryBySlug, listWords } from "@/lib/customVocab";
+import { getCategoryBySlug, listWords, updateWordImage } from "@/lib/customVocab";
+import { generateVocabImage, translateWords } from "@/lib/vocab.functions";
+import { useServerFn } from "@tanstack/react-start";
+
+const LANGUAGES = [
+  "Arabic", "Spanish", "French", "German", "Italian", "Portuguese",
+  "Russian", "Chinese", "Japanese", "Korean", "Hindi", "Turkish",
+  "Dutch", "Polish", "Swedish", "English",
+];
 
 const BUILTIN: Category[] = ["emergency", "greetings", "daily", "food", "travel"];
 
