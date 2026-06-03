@@ -453,11 +453,11 @@ function Learn() {
               aria-label="Scrub through words"
               className="vocab-progress w-full"
               style={{
-                background: `linear-gradient(to right, hsl(var(--primary)) 0%, hsl(var(--primary)) ${
+                background: `linear-gradient(to right, var(--primary) 0%, var(--primary) ${
                   (idx / Math.max(1, words.length - 1)) * 100
-                }%, hsl(var(--muted)) ${
+                }%, var(--muted) ${
                   (idx / Math.max(1, words.length - 1)) * 100
-                }%, hsl(var(--muted)) 100%)`,
+                }%, var(--muted) 100%)`,
               }}
             />
             <div className="mt-2 text-xs text-muted-foreground">
