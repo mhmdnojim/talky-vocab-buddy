@@ -18,12 +18,18 @@ import {
 export const Route = createFileRoute("/_authenticated/upload")({
   head: () => ({
     meta: [
-      { title: "Add Vocabulary - AI Extract & Illustrate" },
+      { title: "Add Vocabulary — AI Extract & Illustrate" },
       {
         name: "description",
         content:
           "Upload a file or describe a topic. AI extracts or invents the words and generates cartoon illustrations.",
       },
+      { property: "og:title", content: "Add Vocabulary — AI Extract & Illustrate" },
+      { property: "og:description", content: "Upload a file or topic; AI builds an illustrated deck." },
+      { property: "og:url", content: "https://talky-vocab-buddy.lovable.app/upload" },
+    ],
+    links: [
+      { rel: "canonical", href: "https://talky-vocab-buddy.lovable.app/upload" },
     ],
   }),
   component: UploadPage,
