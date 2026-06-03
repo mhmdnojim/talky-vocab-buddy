@@ -211,7 +211,7 @@ function Learn() {
     return () => {
       cancelled = true;
     };
-  }, [category]);
+  }, [category, reloadKey]);
 
   useEffect(() => {
     try {
