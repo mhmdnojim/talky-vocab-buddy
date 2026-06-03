@@ -94,7 +94,15 @@ function AuthPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-sm">
+      <div className="relative w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <button
+          type="button"
+          onClick={() => navigate({ to: "/" })}
+          aria-label="Close"
+          className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground"
+        >
+          <X className="h-4 w-4" />
+        </button>
         <h1 className="text-2xl font-bold text-foreground">
           {mode === "signin" ? "Welcome back" : "Create your account"}
         </h1>
