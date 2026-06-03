@@ -443,8 +443,26 @@ function Learn() {
                 ? "…"
                 : ""}
           </div>
-          <div className="mt-2 text-xs text-muted-foreground">
-            {idx + 1} / {words.length}
+          <div className="mt-4 px-2">
+            <input
+              type="range"
+              min={0}
+              max={words.length - 1}
+              value={idx}
+              onChange={(e) => setIdx(Number(e.target.value))}
+              aria-label="Scrub through words"
+              className="vocab-progress w-full"
+              style={{
+                background: `linear-gradient(to right, var(--primary) 0%, var(--primary) ${
+                  (idx / Math.max(1, words.length - 1)) * 100
+                }%, var(--muted) ${
+                  (idx / Math.max(1, words.length - 1)) * 100
+                }%, var(--muted) 100%)`,
+              }}
+            />
+            <div className="mt-2 text-xs text-muted-foreground">
+              {idx + 1} / {words.length}
+            </div>
           </div>
         </div>
       </main>
