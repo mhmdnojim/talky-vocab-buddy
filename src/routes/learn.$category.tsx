@@ -346,6 +346,10 @@ function Learn() {
           >
             {autoplay ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 fill-current" />}
           </button>
+          <WordsManager
+            currentCategorySlug={category}
+            onChanged={() => setReloadKey((k) => k + 1)}
+          />
           <select
             value={targetLang}
             onChange={(e) => changeLang(e.target.value)}
