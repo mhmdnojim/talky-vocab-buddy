@@ -14,7 +14,68 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      custom_categories: {
+        Row: {
+          created_at: string
+          emoji: string
+          id: string
+          label: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          emoji?: string
+          id?: string
+          label: string
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          id?: string
+          label?: string
+          slug?: string
+        }
+        Relationships: []
+      }
+      custom_words: {
+        Row: {
+          category_id: string
+          created_at: string
+          id: string
+          image_url: string | null
+          ipa: string
+          position: number
+          word: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          ipa?: string
+          position?: number
+          word: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          ipa?: string
+          position?: number
+          word?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_words_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "custom_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
