@@ -9,24 +9,14 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as UploadRouteImport } from './routes/upload'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as LearnCategoryRouteImport } from './routes/learn.$category'
+import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as ApiTtsRouteImport } from './routes/api/tts'
+import { Route as AuthenticatedUploadRouteImport } from './routes/_authenticated/upload'
+import { Route as AuthenticatedLearnCategoryRouteImport } from './routes/_authenticated/learn.$category'
 
-const UploadRoute = UploadRouteImport.update({
-  id: '/upload',
-  path: '/upload',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
+const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
+  id: '/_authenticated/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LearnCategoryRoute = LearnCategoryRouteImport.update({
-  id: '/learn/$category',
-  path: '/learn/$category',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiTtsRoute = ApiTtsRouteImport.update({
@@ -34,62 +24,64 @@ const ApiTtsRoute = ApiTtsRouteImport.update({
   path: '/api/tts',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedUploadRoute = AuthenticatedUploadRouteImport.update({
+  id: '/_authenticated/upload',
+  path: '/upload',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedLearnCategoryRoute =
+  AuthenticatedLearnCategoryRouteImport.update({
+    id: '/_authenticated/learn/$category',
+    path: '/learn/$category',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/upload': typeof UploadRoute
+  '/upload': typeof AuthenticatedUploadRoute
   '/api/tts': typeof ApiTtsRoute
-  '/learn/$category': typeof LearnCategoryRoute
+  '/': typeof AuthenticatedIndexRoute
+  '/learn/$category': typeof AuthenticatedLearnCategoryRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/upload': typeof UploadRoute
+  '/upload': typeof AuthenticatedUploadRoute
   '/api/tts': typeof ApiTtsRoute
-  '/learn/$category': typeof LearnCategoryRoute
+  '/': typeof AuthenticatedIndexRoute
+  '/learn/$category': typeof AuthenticatedLearnCategoryRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/upload': typeof UploadRoute
+  '/_authenticated/upload': typeof AuthenticatedUploadRoute
   '/api/tts': typeof ApiTtsRoute
-  '/learn/$category': typeof LearnCategoryRoute
+  '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/learn/$category': typeof AuthenticatedLearnCategoryRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/upload' | '/api/tts' | '/learn/$category'
+  fullPaths: '/upload' | '/api/tts' | '/' | '/learn/$category'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/upload' | '/api/tts' | '/learn/$category'
-  id: '__root__' | '/' | '/upload' | '/api/tts' | '/learn/$category'
+  to: '/upload' | '/api/tts' | '/' | '/learn/$category'
+  id:
+    | '__root__'
+    | '/_authenticated/upload'
+    | '/api/tts'
+    | '/_authenticated/'
+    | '/_authenticated/learn/$category'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  UploadRoute: typeof UploadRoute
+  AuthenticatedUploadRoute: typeof AuthenticatedUploadRoute
   ApiTtsRoute: typeof ApiTtsRoute
-  LearnCategoryRoute: typeof LearnCategoryRoute
+  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedLearnCategoryRoute: typeof AuthenticatedLearnCategoryRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/upload': {
-      id: '/upload'
-      path: '/upload'
-      fullPath: '/upload'
-      preLoaderRoute: typeof UploadRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
+    '/_authenticated/': {
+      id: '/_authenticated/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/learn/$category': {
-      id: '/learn/$category'
-      path: '/learn/$category'
-      fullPath: '/learn/$category'
-      preLoaderRoute: typeof LearnCategoryRouteImport
+      preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/tts': {
@@ -99,15 +91,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTtsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/upload': {
+      id: '/_authenticated/upload'
+      path: '/upload'
+      fullPath: '/upload'
+      preLoaderRoute: typeof AuthenticatedUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/learn/$category': {
+      id: '/_authenticated/learn/$category'
+      path: '/learn/$category'
+      fullPath: '/learn/$category'
+      preLoaderRoute: typeof AuthenticatedLearnCategoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  UploadRoute: UploadRoute,
+  AuthenticatedUploadRoute: AuthenticatedUploadRoute,
   ApiTtsRoute: ApiTtsRoute,
-  LearnCategoryRoute: LearnCategoryRoute,
+  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedLearnCategoryRoute: AuthenticatedLearnCategoryRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
