@@ -4,7 +4,7 @@ import {
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
-  MoreVertical,
+  
   Play,
   Pause,
   Star,
