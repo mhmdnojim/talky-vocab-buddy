@@ -376,3 +376,59 @@ function UploadPage() {
     </div>
   );
 }
+
+function ProgressPanel({ progress }: { progress: WordProgress[] }) {
+  const doneCount = progress.filter((p) => p.status === "done").length;
+  const failedCount = progress.filter((p) => p.status === "failed").length;
+  const pct = Math.round(((doneCount + failedCount) / progress.length) * 100);
+  return (
+    <div className="mt-6 rounded-xl border-2 border-border bg-card p-4">
+      <div className="mb-2 flex items-center justify-between text-sm font-medium">
+        <span>Progress: {doneCount} / {progress.length}</span>
+        <span className="text-muted-foreground">{pct}%</span>
+      </div>
+      <div
+        role="progressbar"
+        aria-valuenow={pct}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        className="mb-3 h-2 w-full overflow-hidden rounded-full bg-muted"
+      >
+        <div
+          className="h-full bg-primary transition-all duration-300"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <ul className="max-h-72 space-y-1 overflow-y-auto text-sm">
+        {progress.map((p, i) => {
+          const prevBatch = i > 0 ? progress[i - 1].batchIndex : -1;
+          const isNewBatch = p.batchIndex !== prevBatch;
+          return (
+            <li key={i}>
+              {isNewBatch && (
+                <div className="mt-2 mb-1 text-xs font-semibold text-primary">
+                  Batch {p.batchIndex + 1}
+                </div>
+              )}
+              <div className="flex items-center justify-between gap-2">
+                <span className="truncate">{p.word}</span>
+                {p.status === "pending" && (
+                  <span className="text-xs text-muted-foreground">waiting</span>
+                )}
+                {p.status === "generating" && (
+                  <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" />
+                )}
+                {p.status === "done" && (
+                  <Check className="h-4 w-4 shrink-0 text-primary" />
+                )}
+                {p.status === "failed" && (
+                  <X className="h-4 w-4 shrink-0 text-destructive" />
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
