@@ -1,26 +1,26 @@
 // Vocabulary dataset. Add more entries here to grow the deck.
 // Each word has a matching cartoon illustration under src/assets/vocab/.
 
-import fire from "@/assets/vocab/fire.jpg";
-import help from "@/assets/vocab/help.jpg";
-import beCareful from "@/assets/vocab/be-careful.jpg";
-import run from "@/assets/vocab/run.jpg";
-import hello from "@/assets/vocab/hello.jpg";
-import goodbye from "@/assets/vocab/goodbye.jpg";
-import thankYou from "@/assets/vocab/thank-you.jpg";
-import sorry from "@/assets/vocab/sorry.jpg";
-import eat from "@/assets/vocab/eat.jpg";
-import drink from "@/assets/vocab/drink.jpg";
-import sleep from "@/assets/vocab/sleep.jpg";
-import work from "@/assets/vocab/work.jpg";
-import water from "@/assets/vocab/water.jpg";
-import bread from "@/assets/vocab/bread.jpg";
-import coffee from "@/assets/vocab/coffee.jpg";
-import apple from "@/assets/vocab/apple.jpg";
-import airport from "@/assets/vocab/airport.jpg";
-import hotel from "@/assets/vocab/hotel.jpg";
-import ticket from "@/assets/vocab/ticket.jpg";
-import taxi from "@/assets/vocab/taxi.jpg";
+import fire from "../assets/vocab/fire.jpg";
+import help from "../assets/vocab/help.jpg";
+import beCareful from "../assets/vocab/be-careful.jpg";
+import run from "../assets/vocab/run.jpg";
+import hello from "../assets/vocab/hello.jpg";
+import goodbye from "../assets/vocab/goodbye.jpg";
+import thankYou from "../assets/vocab/thank-you.jpg";
+import sorry from "../assets/vocab/sorry.jpg";
+import eat from "../assets/vocab/eat.jpg";
+import drink from "../assets/vocab/drink.jpg";
+import sleep from "../assets/vocab/sleep.jpg";
+import work from "../assets/vocab/work.jpg";
+import water from "../assets/vocab/water.jpg";
+import bread from "../assets/vocab/bread.jpg";
+import coffee from "../assets/vocab/coffee.jpg";
+import apple from "../assets/vocab/apple.jpg";
+import airport from "../assets/vocab/airport.jpg";
+import hotel from "../assets/vocab/hotel.jpg";
+import ticket from "../assets/vocab/ticket.jpg";
+import taxi from "../assets/vocab/taxi.jpg";
 
 export type Category =
   | "emergency"
