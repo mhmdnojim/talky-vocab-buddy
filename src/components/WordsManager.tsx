@@ -32,6 +32,7 @@ import {
   insertWord,
   updateWord,
   deleteWord,
+  deleteCategory,
   nextWordPosition,
   type CustomCategory,
   type CustomWord,
