@@ -377,6 +377,15 @@ function Learn() {
             />
           </button>
 
+          <button
+            onClick={handleRegenerate}
+            disabled={regenerating}
+            aria-label="Regenerate image"
+            className="absolute left-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-card/90 text-primary shadow-md backdrop-blur transition hover:bg-card disabled:opacity-60"
+          >
+            <RefreshCw className={`h-4 w-4 ${regenerating ? "animate-spin" : ""}`} />
+          </button>
+
           <div className="relative">
             {current.image ? (
               <img
