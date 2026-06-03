@@ -23,6 +23,7 @@ import { speak } from "@/lib/speak";
 import { getCategoryBySlug, listWords, updateWordImage } from "@/lib/customVocab";
 import { generateVocabImage, translateWords } from "@/lib/vocab.functions";
 import { useServerFn } from "@tanstack/react-start";
+import { WordsManager } from "@/components/WordsManager";
 
 const LANGUAGES = [
   "Arabic", "Spanish", "French", "German", "Italian", "Portuguese",
@@ -95,6 +96,7 @@ function Learn() {
   const [idx, setIdx] = useState(0);
   const [autoplay, setAutoplay] = useState(false);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [reloadKey, setReloadKey] = useState(0);
   const autoplayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [targetLang, setTargetLang] = useState<string>(() => {
@@ -211,7 +213,7 @@ function Learn() {
     return () => {
       cancelled = true;
     };
-  }, [category]);
+  }, [category, reloadKey]);
 
   useEffect(() => {
     try {
@@ -344,6 +346,10 @@ function Learn() {
           >
             {autoplay ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 fill-current" />}
           </button>
+          <WordsManager
+            currentCategorySlug={category}
+            onChanged={() => setReloadKey((k) => k + 1)}
+          />
           <select
             value={targetLang}
             onChange={(e) => changeLang(e.target.value)}
