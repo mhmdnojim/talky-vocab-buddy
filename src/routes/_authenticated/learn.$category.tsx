@@ -19,11 +19,12 @@ import {
   getByCategory,
   type Category,
 } from "@/data/vocabulary";
-import { speak } from "@/lib/speak";
+import { speak, langLabelToBcp47 } from "@/lib/speak";
 import { getCategoryBySlug, listWords, updateWordImage } from "@/lib/customVocab";
 import { generateVocabImage, translateWords } from "@/lib/vocab.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { WordsManager } from "@/components/WordsManager";
+import { RubyText } from "@/components/RubyText";
 
 const LANGUAGES = [
   "Arabic", "Spanish", "French", "German", "Italian", "Portuguese",
