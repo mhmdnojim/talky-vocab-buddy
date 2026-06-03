@@ -375,3 +375,46 @@ function AddWordRow({
     </div>
   );
 }
+
+function DeleteCategoryButton({
+  categoryId,
+  label,
+  onDeleted,
+}: {
+  categoryId: string;
+  label: string;
+  onDeleted: () => Promise<void> | void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const remove = async () => {
+    if (
+      !confirm(
+        `Delete category "${label}" and all its words? This cannot be undone.`,
+      )
+    )
+      return;
+    setBusy(true);
+    try {
+      await deleteCategory(categoryId);
+      await onDeleted();
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Button
+      size="icon"
+      variant="ghost"
+      className="mr-1 h-8 w-8 text-destructive shrink-0"
+      onClick={remove}
+      disabled={busy}
+      aria-label={`Delete category ${label}`}
+    >
+      {busy ? (
+        <Loader2 className="h-4 w-4 animate-spin" />
+      ) : (
+        <Trash2 className="h-4 w-4" />
+      )}
+    </Button>
+  );
+}
