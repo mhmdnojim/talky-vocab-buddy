@@ -9,15 +9,26 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as ApiTtsRouteImport } from './routes/api/tts'
 import { Route as AuthenticatedUploadRouteImport } from './routes/_authenticated/upload'
 import { Route as AuthenticatedLearnCategoryRouteImport } from './routes/_authenticated/learn.$category'
 
-const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
-  id: '/_authenticated/',
-  path: '/',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const ApiTtsRoute = ApiTtsRouteImport.update({
   id: '/api/tts',
@@ -25,24 +36,26 @@ const ApiTtsRoute = ApiTtsRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedUploadRoute = AuthenticatedUploadRouteImport.update({
-  id: '/_authenticated/upload',
+  id: '/upload',
   path: '/upload',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedLearnCategoryRoute =
   AuthenticatedLearnCategoryRouteImport.update({
-    id: '/_authenticated/learn/$category',
+    id: '/learn/$category',
     path: '/learn/$category',
-    getParentRoute: () => rootRouteImport,
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof AuthenticatedIndexRoute
+  '/auth': typeof AuthRoute
   '/upload': typeof AuthenticatedUploadRoute
   '/api/tts': typeof ApiTtsRoute
-  '/': typeof AuthenticatedIndexRoute
   '/learn/$category': typeof AuthenticatedLearnCategoryRoute
 }
 export interface FileRoutesByTo {
+  '/auth': typeof AuthRoute
   '/upload': typeof AuthenticatedUploadRoute
   '/api/tts': typeof ApiTtsRoute
   '/': typeof AuthenticatedIndexRoute
@@ -50,6 +63,8 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
   '/_authenticated/upload': typeof AuthenticatedUploadRoute
   '/api/tts': typeof ApiTtsRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
@@ -57,11 +72,13 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/upload' | '/api/tts' | '/' | '/learn/$category'
+  fullPaths: '/' | '/auth' | '/upload' | '/api/tts' | '/learn/$category'
   fileRoutesByTo: FileRoutesByTo
-  to: '/upload' | '/api/tts' | '/' | '/learn/$category'
+  to: '/auth' | '/upload' | '/api/tts' | '/' | '/learn/$category'
   id:
     | '__root__'
+    | '/_authenticated'
+    | '/auth'
     | '/_authenticated/upload'
     | '/api/tts'
     | '/_authenticated/'
@@ -69,20 +86,33 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  AuthenticatedUploadRoute: typeof AuthenticatedUploadRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
   ApiTtsRoute: typeof ApiTtsRoute
-  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
-  AuthenticatedLearnCategoryRoute: typeof AuthenticatedLearnCategoryRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/': {
       id: '/_authenticated/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/api/tts': {
       id: '/api/tts'
@@ -96,34 +126,38 @@ declare module '@tanstack/react-router' {
       path: '/upload'
       fullPath: '/upload'
       preLoaderRoute: typeof AuthenticatedUploadRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/learn/$category': {
       id: '/_authenticated/learn/$category'
       path: '/learn/$category'
       fullPath: '/learn/$category'
       preLoaderRoute: typeof AuthenticatedLearnCategoryRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
 
-const rootRouteChildren: RootRouteChildren = {
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedUploadRoute: typeof AuthenticatedUploadRoute
+  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedLearnCategoryRoute: typeof AuthenticatedLearnCategoryRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedUploadRoute: AuthenticatedUploadRoute,
-  ApiTtsRoute: ApiTtsRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedLearnCategoryRoute: AuthenticatedLearnCategoryRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
+const rootRouteChildren: RootRouteChildren = {
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  ApiTtsRoute: ApiTtsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
