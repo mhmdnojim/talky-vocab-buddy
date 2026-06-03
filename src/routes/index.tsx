@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useRef } from "react";
-import { Plus, Trash2, LogOut, Download, FileSpreadsheet, FileJson } from "lucide-react";
+import { Plus, Trash2, LogOut, LogIn, Download, FileSpreadsheet, FileJson } from "lucide-react";
 import { CATEGORIES, VOCABULARY } from "@/data/vocabulary";
 import {
   deleteCategory,
@@ -13,34 +13,41 @@ import {
 } from "@/lib/customVocab";
 import { supabase } from "@/integrations/supabase/client";
 
-export const Route = createFileRoute("/_authenticated/")({
+export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Vocabulary — Learn English with Pictures & Voice" },
+      { title: "Speak Easy Words — Learn English with Pictures & Voice" },
       {
         name: "description",
         content:
           "Learn English vocabulary with cartoon illustrations and natural human voice pronunciation. Upload your own list and AI builds a deck for you.",
       },
-      { property: "og:title", content: "Vocabulary — Learn English with Pictures & Voice" },
+      { property: "og:title", content: "Speak Easy Words — Learn English with Pictures & Voice" },
       { property: "og:description", content: "Browse categories and learn with pictures, IPA, and voice." },
       { property: "og:url", content: "https://talky-vocab-buddy.lovable.app/" },
     ],
-    links: [
-      { rel: "canonical", href: "https://talky-vocab-buddy.lovable.app/" },
-    ],
+    links: [{ rel: "canonical", href: "https://talky-vocab-buddy.lovable.app/" }],
   }),
   component: Home,
 });
 
 function Home() {
   const navigate = useNavigate();
+  const [authed, setAuthed] = useState(false);
   const [customCats, setCustomCats] = useState<CustomCategory[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [exportOpen, setExportOpen] = useState(false);
   const exportRef = useRef<HTMLDivElement>(null);
 
   const reload = async () => {
+    const { data: userData } = await supabase.auth.getUser();
+    const isAuthed = !!userData.user;
+    setAuthed(isAuthed);
+    if (!isAuthed) {
+      setCustomCats([]);
+      setCounts({});
+      return;
+    }
     const cats = await listCategories();
     setCustomCats(cats);
     if (cats.length) {
@@ -58,6 +65,8 @@ function Home() {
 
   useEffect(() => {
     void reload();
+    const { data: sub } = supabase.auth.onAuthStateChange(() => void reload());
+    return () => sub.subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -102,56 +111,68 @@ function Home() {
               Tap a category to start learning with pictures and voice
             </p>
           </div>
-          <button
-            onClick={async () => {
-              await supabase.auth.signOut();
-              navigate({ to: "/auth", replace: true });
-            }}
-            aria-label="Sign out"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-foreground/10 transition hover:bg-primary-foreground/20"
-          >
-            <LogOut className="h-4 w-4" />
-          </button>
+          {authed ? (
+            <button
+              onClick={async () => {
+                await supabase.auth.signOut();
+                void reload();
+              }}
+              aria-label="Sign out"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-foreground/10 transition hover:bg-primary-foreground/20"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
+          ) : (
+            <button
+              onClick={() => navigate({ to: "/auth" })}
+              aria-label="Sign in"
+              className="flex h-9 items-center gap-1.5 shrink-0 rounded-full bg-primary-foreground/10 px-3 text-sm font-semibold transition hover:bg-primary-foreground/20"
+            >
+              <LogIn className="h-4 w-4" /> Sign in
+            </button>
+          )}
         </div>
       </header>
 
       <main className="mx-auto max-w-2xl px-4 pt-6">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-foreground">Categories</h2>
-          <div className="flex items-center gap-2">
-            <div className="relative" ref={exportRef}>
-              <button
-                onClick={() => setExportOpen((v) => !v)}
-                className="flex items-center gap-1 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm transition hover:bg-muted"
+          {authed && (
+            <div className="flex items-center gap-2">
+              <div className="relative" ref={exportRef}>
+                <button
+                  onClick={() => setExportOpen((v) => !v)}
+                  className="flex items-center gap-1 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm transition hover:bg-muted"
+                >
+                  <Download className="h-3.5 w-3.5" /> Export
+                </button>
+                {exportOpen && (
+                  <div className="absolute right-0 top-full z-10 mt-1 w-40 rounded-xl border border-border bg-card p-1 shadow-lg">
+                    <button
+                      onClick={() => doExport("csv")}
+                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition hover:bg-muted"
+                    >
+                      <FileSpreadsheet className="h-4 w-4 text-green-600" />
+                      Download CSV
+                    </button>
+                    <button
+                      onClick={() => doExport("json")}
+                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition hover:bg-muted"
+                    >
+                      <FileJson className="h-4 w-4 text-amber-600" />
+                      Download JSON
+                    </button>
+                  </div>
+                )}
+              </div>
+              <Link
+                to="/upload"
+                className="flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
               >
-                <Download className="h-3.5 w-3.5" /> Export
-              </button>
-              {exportOpen && (
-                <div className="absolute right-0 top-full z-10 mt-1 w-40 rounded-xl border border-border bg-card p-1 shadow-lg">
-                  <button
-                    onClick={() => doExport("csv")}
-                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition hover:bg-muted"
-                  >
-                    <FileSpreadsheet className="h-4 w-4 text-green-600" />
-                    Download CSV
-                  </button>
-                  <button
-                    onClick={() => doExport("json")}
-                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition hover:bg-muted"
-                  >
-                    <FileJson className="h-4 w-4 text-amber-600" />
-                    Download JSON
-                  </button>
-                </div>
-              )}
+                <Plus className="h-3.5 w-3.5" /> Add from file
+              </Link>
             </div>
-            <Link
-              to="/upload"
-              className="flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
-            >
-              <Plus className="h-3.5 w-3.5" /> Add from file
-            </Link>
-          </div>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -172,7 +193,7 @@ function Home() {
           })}
         </div>
 
-        {customCats.length > 0 && (
+        {authed && customCats.length > 0 && (
           <>
             <h2 className="mb-4 mt-8 text-lg font-semibold text-foreground">
               Your categories
@@ -204,6 +225,18 @@ function Home() {
               ))}
             </div>
           </>
+        )}
+
+        {!authed && (
+          <p className="mt-8 text-center text-sm text-muted-foreground">
+            <button
+              onClick={() => navigate({ to: "/auth" })}
+              className="font-semibold text-primary underline-offset-2 hover:underline"
+            >
+              Sign in
+            </button>{" "}
+            to upload your own word lists and save custom categories.
+          </p>
         )}
 
         <p className="mt-8 text-center text-xs text-muted-foreground">
