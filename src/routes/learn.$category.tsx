@@ -418,7 +418,14 @@ function Learn() {
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-muted-foreground">
               <span className="text-sm">👤</span>
             </div>
-            <span className="text-xl font-medium">{current.word}</span>
+            <div className="flex flex-col">
+              <span className="text-xl font-medium leading-tight">{current.word}</span>
+              {translations[current.word] && (
+                <span className="text-xs text-muted-foreground" dir="auto">
+                  {translations[current.word]}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
@@ -429,6 +436,13 @@ function Learn() {
           {current.ipa && (
             <div className="mt-2 text-base text-muted-foreground">[ {current.ipa} ]</div>
           )}
+          <div className="mt-1 min-h-[1.25rem] text-sm text-muted-foreground" dir="auto">
+            {translations[current.word]
+              ? translations[current.word]
+              : translating
+                ? "…"
+                : ""}
+          </div>
           <div className="mt-2 text-xs text-muted-foreground">
             {idx + 1} / {words.length}
           </div>
