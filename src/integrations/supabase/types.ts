@@ -21,6 +21,7 @@ export type Database = {
           id: string
           label: string
           slug: string
+          user_id: string
         }
         Insert: {
           created_at?: string
@@ -28,6 +29,7 @@ export type Database = {
           id?: string
           label: string
           slug: string
+          user_id: string
         }
         Update: {
           created_at?: string
@@ -35,6 +37,7 @@ export type Database = {
           id?: string
           label?: string
           slug?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -46,6 +49,7 @@ export type Database = {
           image_url: string | null
           ipa: string
           position: number
+          user_id: string
           word: string
         }
         Insert: {
@@ -55,6 +59,7 @@ export type Database = {
           image_url?: string | null
           ipa?: string
           position?: number
+          user_id: string
           word: string
         }
         Update: {
@@ -64,6 +69,7 @@ export type Database = {
           image_url?: string | null
           ipa?: string
           position?: number
+          user_id?: string
           word?: string
         }
         Relationships: [
