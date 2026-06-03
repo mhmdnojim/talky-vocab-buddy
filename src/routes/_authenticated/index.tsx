@@ -37,6 +37,8 @@ function Home() {
   const navigate = useNavigate();
   const [customCats, setCustomCats] = useState<CustomCategory[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
+  const [exportOpen, setExportOpen] = useState(false);
+  const exportRef = useRef<HTMLDivElement>(null);
 
   const reload = async () => {
     const cats = await listCategories();
@@ -58,10 +60,36 @@ function Home() {
     void reload();
   }, []);
 
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (exportRef.current && !exportRef.current.contains(e.target as Node)) {
+        setExportOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const removeCat = async (id: string) => {
     if (!confirm("Delete this category and all its words?")) return;
     await deleteCategory(id);
     void reload();
+  };
+
+  const doExport = async (format: "csv" | "json") => {
+    setExportOpen(false);
+    try {
+      const { categories, words } = await exportAllUserData();
+      if (format === "csv") {
+        const csv = buildCsv(categories, words);
+        downloadFile(csv, "vocabulary.csv", "text/csv;charset=utf-8;");
+      } else {
+        const json = buildJson(categories, words);
+        downloadFile(json, "vocabulary.json", "application/json;charset=utf-8;");
+      }
+    } catch {
+      alert("Export failed. Please try again.");
+    }
   };
 
   return (
