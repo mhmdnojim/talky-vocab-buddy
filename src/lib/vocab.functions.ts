@@ -16,7 +16,22 @@ export const translateWords = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => TranslateInput.parse(input))
   .handler(async ({ data }) => {
     const list = data.words.map((w, i) => `${i + 1}. ${w}`).join("\n");
-    const prompt = `Detect the source language, then translate each item to ${data.targetLang}. Return ONLY strict JSON: {"sourceLang":"<language name in English>","translations":["t1","t2",...]} in the SAME order. Keep translations short (1-4 words). Do not add notes.\n\nITEMS:\n${list}`;
+    const prompt = `Detect the source language, then translate each item to ${data.targetLang}. Keep translations short (1-4 words). Do not add notes.
+
+For any string (source OR translation) that contains Chinese characters (Hanzi), also return a "pinyin" field: an array with one entry PER Chinese character in that string, in order, using standard Hanyu Pinyin WITH tone marks (e.g. "nǐ", "hǎo"). Non-Chinese characters are skipped. If a string has no Chinese characters, set its pinyin to null.
+
+Return ONLY strict JSON in this exact shape:
+{
+  "sourceLang": "<language name in English>",
+  "items": [
+    { "translation": "...", "sourcePinyin": ["..."] | null, "translationPinyin": ["..."] | null },
+    ...
+  ]
+}
+Keep the items array in the SAME order as ITEMS.
+
+ITEMS:
+${list}`;
     const result = await callLovableAI({
       model: "google/gemini-2.5-flash",
       messages: [
@@ -26,18 +41,39 @@ export const translateWords = createServerFn({ method: "POST" })
       response_format: { type: "json_object" },
     });
     const content = result?.choices?.[0]?.message?.content ?? "{}";
-    let parsed: { sourceLang?: string; translations?: string[] };
+    let parsed: {
+      sourceLang?: string;
+      items?: {
+        translation?: string;
+        sourcePinyin?: string[] | null;
+        translationPinyin?: string[] | null;
+      }[];
+      translations?: string[]; // backwards-compat fallback
+    };
     try {
       parsed = JSON.parse(content);
     } catch {
       const m = content.match(/\{[\s\S]*\}/);
       parsed = m ? JSON.parse(m[0]) : {};
     }
+    const items = parsed.items ?? [];
+    const translations: string[] = [];
+    const sourcePinyin: (string[] | null)[] = [];
+    const translationPinyin: (string[] | null)[] = [];
+    for (let i = 0; i < data.words.length; i++) {
+      const it = items[i] ?? {};
+      translations.push((it.translation ?? parsed.translations?.[i] ?? "").toString());
+      sourcePinyin.push(Array.isArray(it.sourcePinyin) ? it.sourcePinyin : null);
+      translationPinyin.push(Array.isArray(it.translationPinyin) ? it.translationPinyin : null);
+    }
     return {
       sourceLang: parsed.sourceLang ?? "Unknown",
-      translations: (parsed.translations ?? []).slice(0, data.words.length),
+      translations,
+      sourcePinyin,
+      translationPinyin,
     };
   });
+
 
 async function callLovableAI(body: unknown): Promise<any> {
   const key = process.env.LOVABLE_API_KEY;
