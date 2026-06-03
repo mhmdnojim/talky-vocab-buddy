@@ -244,17 +244,19 @@ function WordRow({
           onChange={(e) => setW(e.target.value)}
           className="h-8 flex-1"
           placeholder="Word"
+          aria-label="Word"
         />
         <Input
           value={ipa}
           onChange={(e) => setIpa(e.target.value)}
           className="h-8 w-24"
           placeholder="IPA"
+          aria-label="IPA pronunciation"
         />
-        <Button size="icon" variant="ghost" onClick={save} disabled={busy}>
+        <Button size="icon" variant="ghost" onClick={save} disabled={busy} aria-label="Save word">
           {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
         </Button>
-        <Button size="icon" variant="ghost" onClick={() => setEditing(false)}>
+        <Button size="icon" variant="ghost" onClick={() => setEditing(false)} aria-label="Cancel edit">
           <X className="h-4 w-4" />
         </Button>
       </div>
@@ -342,6 +344,7 @@ function AddWordRow({
         onChange={(e) => setW(e.target.value)}
         className="h-8 flex-1"
         placeholder="New word"
+        aria-label="New word"
         onKeyDown={(e) => {
           if (e.key === "Enter") void add();
         }}
@@ -351,8 +354,9 @@ function AddWordRow({
         onChange={(e) => setIpa(e.target.value)}
         className="h-8 w-24"
         placeholder="IPA"
+        aria-label="IPA pronunciation"
       />
-      <Button size="icon" variant="ghost" onClick={add} disabled={busy || !w.trim()}>
+      <Button size="icon" variant="ghost" onClick={add} disabled={busy || !w.trim()} aria-label="Add word">
         {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
       </Button>
     </div>

@@ -1,0 +1,9 @@
+# Speak Easy Words
+
+> Learn English vocabulary with cartoon illustrations, IPA pronunciation, natural human voice, and translations into 16 languages. Upload a file or describe a topic — AI extracts the words and draws every one.
+
+## Pages
+
+- [Home](/): Browse built-in vocabulary categories and your AI-generated decks.
+- [Add category](/upload): Upload a file (xlsx, csv, pdf, docx, txt) or describe a topic; AI builds an illustrated deck.
+- [Sign in](/auth): Create an account or log in to save your custom decks.

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://talky-vocab-buddy.lovable.app/sitemap.xml

@@ -12,12 +12,18 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
     meta: [
-      { title: "Vocabulary - Learn English with Pictures & Voice" },
+      { title: "Vocabulary — Learn English with Pictures & Voice" },
       {
         name: "description",
         content:
           "Learn English vocabulary with cartoon illustrations and natural human voice pronunciation. Upload your own list and AI builds a deck for you.",
       },
+      { property: "og:title", content: "Vocabulary — Learn English with Pictures & Voice" },
+      { property: "og:description", content: "Browse categories and learn with pictures, IPA, and voice." },
+      { property: "og:url", content: "https://talky-vocab-buddy.lovable.app/" },
+    ],
+    links: [
+      { rel: "canonical", href: "https://talky-vocab-buddy.lovable.app/" },
     ],
   }),
   component: Home,

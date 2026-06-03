@@ -44,12 +44,29 @@ export const Route = createFileRoute("/_authenticated/learn/$category")({
   head: ({ params }) => {
     const cat = CATEGORIES.find((c) => c.id === params.category);
     const title = cat ? `${cat.label} Vocabulary` : "Vocabulary";
+    const url = `https://talky-vocab-buddy.lovable.app/learn/${params.category}`;
+    const description = `Learn ${cat?.label ?? "English"} vocabulary with cartoon pictures and natural pronunciation.`;
     return {
       meta: [
-        { title: `${title} - Learn with Voice` },
+        { title: `${title} — Learn with Voice` },
+        { name: "description", content: description },
+        { property: "og:title", content: `${title} — Learn with Voice` },
+        { property: "og:description", content: description },
+        { property: "og:url", content: url },
+      ],
+      links: [{ rel: "canonical", href: url }],
+      scripts: [
         {
-          name: "description",
-          content: `Learn ${cat?.label ?? "English"} vocabulary with cartoon pictures and natural pronunciation.`,
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "LearningResource",
+            name: `${title}`,
+            url,
+            description,
+            learningResourceType: "Vocabulary deck",
+            inLanguage: "en",
+          }),
         },
       ],
     };
@@ -396,7 +413,7 @@ function Learn() {
             {current.image ? (
               <img
                 src={current.image}
-                alt={current.word}
+                alt={`${current.word} illustration`}
                 className="aspect-square w-full object-cover"
               />
             ) : (
