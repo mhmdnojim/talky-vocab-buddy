@@ -344,12 +344,18 @@ function Learn() {
           >
             {autoplay ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 fill-current" />}
           </button>
-          <button
-            className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-primary-foreground/80"
-            aria-label="More"
+          <select
+            value={targetLang}
+            onChange={(e) => changeLang(e.target.value)}
+            className="h-9 rounded-full border-2 border-primary-foreground/80 bg-primary px-2 text-xs font-medium text-primary-foreground focus:outline-none"
+            aria-label="Translation language"
           >
-            <MoreVertical className="h-5 w-5" />
-          </button>
+            {LANGUAGES.map((l) => (
+              <option key={l} value={l} className="text-foreground">
+                {l}
+              </option>
+            ))}
+          </select>
         </div>
       </header>
 
