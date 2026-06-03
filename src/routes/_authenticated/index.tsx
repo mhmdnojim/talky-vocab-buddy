@@ -1,6 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, LogOut } from "lucide-react";
 import { CATEGORIES, VOCABULARY } from "@/data/vocabulary";
 import {
   deleteCategory,
@@ -24,6 +24,7 @@ export const Route = createFileRoute("/_authenticated/")({
 });
 
 function Home() {
+  const navigate = useNavigate();
   const [customCats, setCustomCats] = useState<CustomCategory[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
 
@@ -56,10 +57,24 @@ function Home() {
   return (
     <div className="min-h-screen bg-background pb-16">
       <header className="bg-primary px-5 py-6 text-primary-foreground shadow-md">
-        <h1 className="text-2xl font-bold tracking-tight">Vocabulary</h1>
-        <p className="mt-1 text-sm opacity-90">
-          Tap a category to start learning with pictures and voice
-        </p>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Vocabulary</h1>
+            <p className="mt-1 text-sm opacity-90">
+              Tap a category to start learning with pictures and voice
+            </p>
+          </div>
+          <button
+            onClick={async () => {
+              await supabase.auth.signOut();
+              navigate({ to: "/auth", replace: true });
+            }}
+            aria-label="Sign out"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-foreground/10 transition hover:bg-primary-foreground/20"
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
+        </div>
       </header>
 
       <main className="mx-auto max-w-2xl px-4 pt-6">
