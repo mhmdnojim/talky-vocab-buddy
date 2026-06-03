@@ -40,7 +40,7 @@ interface DisplayWord {
   image: string | null;
 }
 
-export const Route = createFileRoute("/learn/$category")({
+export const Route = createFileRoute("/_authenticated/learn/$category")({
   head: ({ params }) => {
     const cat = CATEGORIES.find((c) => c.id === params.category);
     const title = cat ? `${cat.label} Vocabulary` : "Vocabulary";

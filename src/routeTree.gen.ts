@@ -9,88 +9,110 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as UploadRouteImport } from './routes/upload'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as LearnCategoryRouteImport } from './routes/learn.$category'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as ApiTtsRouteImport } from './routes/api/tts'
+import { Route as AuthenticatedUploadRouteImport } from './routes/_authenticated/upload'
+import { Route as AuthenticatedLearnCategoryRouteImport } from './routes/_authenticated/learn.$category'
 
-const UploadRoute = UploadRouteImport.update({
-  id: '/upload',
-  path: '/upload',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LearnCategoryRoute = LearnCategoryRouteImport.update({
-  id: '/learn/$category',
-  path: '/learn/$category',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const ApiTtsRoute = ApiTtsRouteImport.update({
   id: '/api/tts',
   path: '/api/tts',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedUploadRoute = AuthenticatedUploadRouteImport.update({
+  id: '/upload',
+  path: '/upload',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedLearnCategoryRoute =
+  AuthenticatedLearnCategoryRouteImport.update({
+    id: '/learn/$category',
+    path: '/learn/$category',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/upload': typeof UploadRoute
+  '/': typeof AuthenticatedIndexRoute
+  '/auth': typeof AuthRoute
+  '/upload': typeof AuthenticatedUploadRoute
   '/api/tts': typeof ApiTtsRoute
-  '/learn/$category': typeof LearnCategoryRoute
+  '/learn/$category': typeof AuthenticatedLearnCategoryRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/upload': typeof UploadRoute
+  '/auth': typeof AuthRoute
+  '/upload': typeof AuthenticatedUploadRoute
   '/api/tts': typeof ApiTtsRoute
-  '/learn/$category': typeof LearnCategoryRoute
+  '/': typeof AuthenticatedIndexRoute
+  '/learn/$category': typeof AuthenticatedLearnCategoryRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/upload': typeof UploadRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/_authenticated/upload': typeof AuthenticatedUploadRoute
   '/api/tts': typeof ApiTtsRoute
-  '/learn/$category': typeof LearnCategoryRoute
+  '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/learn/$category': typeof AuthenticatedLearnCategoryRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/upload' | '/api/tts' | '/learn/$category'
+  fullPaths: '/' | '/auth' | '/upload' | '/api/tts' | '/learn/$category'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/upload' | '/api/tts' | '/learn/$category'
-  id: '__root__' | '/' | '/upload' | '/api/tts' | '/learn/$category'
+  to: '/auth' | '/upload' | '/api/tts' | '/' | '/learn/$category'
+  id:
+    | '__root__'
+    | '/_authenticated'
+    | '/auth'
+    | '/_authenticated/upload'
+    | '/api/tts'
+    | '/_authenticated/'
+    | '/_authenticated/learn/$category'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  UploadRoute: typeof UploadRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
   ApiTtsRoute: typeof ApiTtsRoute
-  LearnCategoryRoute: typeof LearnCategoryRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/upload': {
-      id: '/upload'
-      path: '/upload'
-      fullPath: '/upload'
-      preLoaderRoute: typeof UploadRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/': {
+      id: '/_authenticated/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/learn/$category': {
-      id: '/learn/$category'
-      path: '/learn/$category'
-      fullPath: '/learn/$category'
-      preLoaderRoute: typeof LearnCategoryRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/api/tts': {
       id: '/api/tts'
@@ -99,14 +121,42 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTtsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/upload': {
+      id: '/_authenticated/upload'
+      path: '/upload'
+      fullPath: '/upload'
+      preLoaderRoute: typeof AuthenticatedUploadRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/learn/$category': {
+      id: '/_authenticated/learn/$category'
+      path: '/learn/$category'
+      fullPath: '/learn/$category'
+      preLoaderRoute: typeof AuthenticatedLearnCategoryRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedUploadRoute: typeof AuthenticatedUploadRoute
+  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedLearnCategoryRoute: typeof AuthenticatedLearnCategoryRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedUploadRoute: AuthenticatedUploadRoute,
+  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedLearnCategoryRoute: AuthenticatedLearnCategoryRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  UploadRoute: UploadRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
   ApiTtsRoute: ApiTtsRoute,
-  LearnCategoryRoute: LearnCategoryRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

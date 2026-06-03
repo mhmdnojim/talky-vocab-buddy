@@ -28,6 +28,12 @@ export function slugify(s: string): string {
   );
 }
 
+async function requireUserId(): Promise<string> {
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data.user) throw new Error("Not signed in");
+  return data.user.id;
+}
+
 export async function listCategories(): Promise<CustomCategory[]> {
   const { data, error } = await supabase
     .from("custom_categories")
@@ -61,8 +67,8 @@ export async function createCategory(input: {
   label: string;
   emoji: string;
 }): Promise<CustomCategory> {
+  const user_id = await requireUserId();
   let slug = slugify(input.label);
-  // Make slug unique
   for (let attempt = 0; attempt < 5; attempt++) {
     const { data: existing } = await supabase
       .from("custom_categories")
@@ -74,7 +80,7 @@ export async function createCategory(input: {
   }
   const { data, error } = await supabase
     .from("custom_categories")
-    .insert({ label: input.label, emoji: input.emoji, slug })
+    .insert({ label: input.label, emoji: input.emoji, slug, user_id })
     .select("id, slug, label, emoji")
     .single();
   if (error) throw error;
@@ -88,7 +94,8 @@ export async function insertWord(input: {
   image_url: string | null;
   position: number;
 }): Promise<void> {
-  const { error } = await supabase.from("custom_words").insert(input);
+  const user_id = await requireUserId();
+  const { error } = await supabase.from("custom_words").insert({ ...input, user_id });
   if (error) throw error;
 }
 
@@ -101,6 +108,8 @@ export async function updateWordImage(id: string, image_url: string): Promise<vo
 }
 
 export async function deleteCategory(id: string): Promise<void> {
+  // Words are owned per-user too; remove them first since there's no FK cascade.
+  await supabase.from("custom_words").delete().eq("category_id", id);
   const { error } = await supabase.from("custom_categories").delete().eq("id", id);
   if (error) throw error;
 }

@@ -15,7 +15,7 @@ import {
   listWords,
 } from "@/lib/customVocab";
 
-export const Route = createFileRoute("/upload")({
+export const Route = createFileRoute("/_authenticated/upload")({
   head: () => ({
     meta: [
       { title: "Add Vocabulary - AI Extract & Illustrate" },
