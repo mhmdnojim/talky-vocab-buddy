@@ -97,6 +97,78 @@ function Learn() {
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const autoplayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const [targetLang, setTargetLang] = useState<string>(() => {
+    if (typeof window === "undefined") return "Arabic";
+    return localStorage.getItem("vocab-target-lang") || "Arabic";
+  });
+  const [translations, setTranslations] = useState<Record<string, string>>({});
+  const [translating, setTranslating] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
+  const translate = useServerFn(translateWords);
+  const regenImage = useServerFn(generateVocabImage);
+
+  // Translate all words when words or language changes
+  useEffect(() => {
+    if (!words || words.length === 0) return;
+    let cancelled = false;
+    setTranslations({});
+    setTranslating(true);
+    (async () => {
+      try {
+        const wordsList = words.map((w) => w.word);
+        const res = await translate({ data: { words: wordsList, targetLang } });
+        if (cancelled) return;
+        const map: Record<string, string> = {};
+        wordsList.forEach((w, i) => {
+          if (res.translations[i]) map[w] = res.translations[i];
+        });
+        setTranslations(map);
+      } catch {
+        /* ignore */
+      } finally {
+        if (!cancelled) setTranslating(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [words, targetLang]);
+
+  const changeLang = (lang: string) => {
+    setTargetLang(lang);
+    try {
+      localStorage.setItem("vocab-target-lang", lang);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const handleRegenerate = async () => {
+    if (!words || regenerating) return;
+    const cur = words[idx];
+    if (!cur) return;
+    setRegenerating(true);
+    try {
+      const res = await regenImage({ data: { word: cur.word } });
+      const newImage = res.dataUrl;
+      setWords((prev) =>
+        prev ? prev.map((w, i) => (i === idx ? { ...w, image: newImage } : w)) : prev,
+      );
+      // Persist for custom words (UUIDs)
+      if (/^[0-9a-f-]{36}$/i.test(cur.id)) {
+        try {
+          await updateWordImage(cur.id, newImage);
+        } catch {
+          /* ignore */
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setRegenerating(false);
+    }
+  };
+
   // Load words (builtin or custom)
   useEffect(() => {
     let cancelled = false;
