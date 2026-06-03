@@ -122,6 +122,8 @@ function Learn() {
     return localStorage.getItem("vocab-target-lang") || "Arabic";
   });
   const [translations, setTranslations] = useState<Record<string, string>>({});
+  const [sourcePinyin, setSourcePinyin] = useState<Record<string, string[] | null>>({});
+  const [translationPinyin, setTranslationPinyin] = useState<Record<string, string[] | null>>({});
   const [translating, setTranslating] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
   const translate = useServerFn(translateWords);
@@ -132,17 +134,25 @@ function Learn() {
     if (!words || words.length === 0) return;
     let cancelled = false;
     setTranslations({});
+    setSourcePinyin({});
+    setTranslationPinyin({});
     setTranslating(true);
     (async () => {
       try {
         const wordsList = words.map((w) => w.word);
         const res = await translate({ data: { words: wordsList, targetLang } });
         if (cancelled) return;
-        const map: Record<string, string> = {};
+        const tMap: Record<string, string> = {};
+        const spMap: Record<string, string[] | null> = {};
+        const tpMap: Record<string, string[] | null> = {};
         wordsList.forEach((w, i) => {
-          if (res.translations[i]) map[w] = res.translations[i];
+          if (res.translations[i]) tMap[w] = res.translations[i];
+          spMap[w] = res.sourcePinyin?.[i] ?? null;
+          tpMap[w] = res.translationPinyin?.[i] ?? null;
         });
-        setTranslations(map);
+        setTranslations(tMap);
+        setSourcePinyin(spMap);
+        setTranslationPinyin(tpMap);
       } catch {
         /* ignore */
       } finally {
