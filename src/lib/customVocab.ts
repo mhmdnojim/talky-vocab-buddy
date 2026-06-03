@@ -104,3 +104,24 @@ export async function deleteCategory(id: string): Promise<void> {
   const { error } = await supabase.from("custom_categories").delete().eq("id", id);
   if (error) throw error;
 }
+
+export async function updateWord(id: string, patch: { word?: string; ipa?: string }): Promise<void> {
+  const { error } = await supabase.from("custom_words").update(patch).eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteWord(id: string): Promise<void> {
+  const { error } = await supabase.from("custom_words").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export async function nextWordPosition(category_id: string): Promise<number> {
+  const { data, error } = await supabase
+    .from("custom_words")
+    .select("position")
+    .eq("category_id", category_id)
+    .order("position", { ascending: false })
+    .limit(1);
+  if (error) throw error;
+  return ((data?.[0]?.position ?? -1) as number) + 1;
+}
