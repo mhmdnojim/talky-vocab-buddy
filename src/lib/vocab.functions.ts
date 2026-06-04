@@ -180,7 +180,33 @@ export const generateExampleSentence = createServerFn({ method: "POST" })
     return { sentence: (parsed.sentence ?? "").toString().trim() };
   });
 
-const ImageInput = z.object({ word: z.string().min(1).max(120) });
+export const IMAGE_STYLES = {
+  cartoon:
+    "Flat cartoon illustration, simple friendly characters, clear visual metaphor, light teal/mint background, soft pastel colors, thick clean outlines, centered composition",
+  realistic:
+    "Photorealistic photograph, natural lighting, high detail, shallow depth of field, real-world setting, centered subject",
+  watercolor:
+    "Soft watercolor painting, gentle brush strokes, paper texture, muted pastel palette, hand-painted look, centered composition",
+  "3d":
+    "Cute 3D render, Pixar-style, soft global illumination, glossy materials, pastel background, centered subject",
+  pixel:
+    "Retro 16-bit pixel art, limited color palette, crisp pixels, simple background, centered subject",
+  line:
+    "Minimal black line drawing on white background, clean thin strokes, no shading, single accent color, centered subject",
+  anime:
+    "Anime / manga illustration, expressive characters, cel shading, vibrant colors, soft background, centered composition",
+  sketch:
+    "Pencil sketch, hand-drawn, hatching and shading, off-white paper background, centered subject",
+} as const;
+
+export type ImageStyle = keyof typeof IMAGE_STYLES;
+
+const ImageInput = z.object({
+  word: z.string().min(1).max(120),
+  style: z
+    .enum(["cartoon", "realistic", "watercolor", "3d", "pixel", "line", "anime", "sketch"])
+    .default("cartoon"),
+});
 
 export const generateVocabImage = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => ImageInput.parse(input))
@@ -188,7 +214,8 @@ export const generateVocabImage = createServerFn({ method: "POST" })
     const key = process.env.LOVABLE_API_KEY;
     if (!key) throw new Error("LOVABLE_API_KEY missing");
 
-    const prompt = `Flat cartoon illustration representing the English word/phrase "${data.word}". Simple, friendly characters, clear visual metaphor, light teal/mint background, soft pastel colors, thick clean outlines, centered composition, no text or letters in the image.`;
+    const styleDesc = IMAGE_STYLES[data.style];
+    const prompt = `${styleDesc}, representing the English word/phrase "${data.word}". No text or letters in the image.`;
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
       method: "POST",
