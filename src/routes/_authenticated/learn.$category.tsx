@@ -406,6 +406,32 @@ function Learn() {
             onJump={(i) => setIdx(i)}
           />
         )}
+        {(() => {
+          const patchStart = Math.floor(idx / patchSize) * patchSize;
+          const patchEnd = Math.min(patchStart + patchSize, words.length);
+          const inPatch = idx - patchStart;
+          const patchLen = patchEnd - patchStart;
+          const pct = (inPatch / Math.max(1, patchLen - 1)) * 100;
+          return (
+            <div className="mb-3 px-1">
+              <input
+                type="range"
+                min={patchStart}
+                max={patchEnd - 1}
+                value={idx}
+                onChange={(e) => setIdx(Number(e.target.value))}
+                aria-label="Patch progress"
+                className="vocab-progress w-full"
+                style={{
+                  background: `linear-gradient(to right, var(--primary) 0%, var(--primary) ${pct}%, var(--muted) ${pct}%, var(--muted) 100%)`,
+                }}
+              />
+              <div className="mt-1 text-center text-xs text-muted-foreground">
+                {inPatch + 1} / {patchLen}
+              </div>
+            </div>
+          );
+        })()}
         <div
           className="relative overflow-hidden rounded-2xl bg-card shadow-sm"
           onTouchStart={onTouchStart}
