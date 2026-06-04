@@ -41,6 +41,8 @@ interface DisplayWord {
   image: string | null;
 }
 
+const DEFAULT_PATCH_SIZE = 20;
+
 export const Route = createFileRoute("/_authenticated/learn/$category")({
   head: ({ params }) => {
     const cat = CATEGORIES.find((c) => c.id === params.category);
