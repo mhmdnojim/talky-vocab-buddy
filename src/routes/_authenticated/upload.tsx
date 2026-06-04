@@ -73,6 +73,7 @@ function UploadPage() {
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<WordProgress[]>([]);
   const [statusMsg, setStatusMsg] = useState("");
+  const [extractLog, setExtractLog] = useState<string[]>([]);
 
   // User-configurable
   const [maxTotal, setMaxTotal] = useState(40); // total words to extract / generate
