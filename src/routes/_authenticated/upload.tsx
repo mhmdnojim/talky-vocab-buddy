@@ -531,11 +531,23 @@ function ProgressPanel({ progress }: { progress: WordProgress[] }) {
         {progress.map((p, i) => {
           const prevBatch = i > 0 ? progress[i - 1].batchIndex : -1;
           const isNewBatch = p.batchIndex !== prevBatch;
+          const patchWords = progress.filter((x) => x.batchIndex === p.batchIndex);
+          const patchDone = patchWords.every(
+            (x) => x.status === "done" || x.status === "failed",
+          );
           return (
             <li key={i}>
               {isNewBatch && (
-                <div className="mt-2 mb-1 text-xs font-semibold text-primary">
-                  Batch {p.batchIndex + 1}
+                <div className="mt-2 mb-1 flex items-center gap-2 text-xs font-semibold text-primary">
+                  <span>Patch {p.batchIndex + 1}</span>
+                  {patchDone && (
+                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                      <Check className="h-3 w-3" />
+                    </span>
+                  )}
+                  <span className="text-[10px] font-normal text-muted-foreground">
+                    ({patchWords.filter((x) => x.status === "done").length}/{patchWords.length})
+                  </span>
                 </div>
               )}
               <div className="flex items-center justify-between gap-2">
@@ -557,6 +569,7 @@ function ProgressPanel({ progress }: { progress: WordProgress[] }) {
           );
         })}
       </ul>
+
     </div>
   );
 }
