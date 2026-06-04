@@ -466,8 +466,30 @@ function UploadPage() {
                   disabled={busy}
                 />
                 <ImageIcon className="h-4 w-4 text-primary" />
-                Cartoon image
+                Image
               </label>
+              {doImages && (
+                <div className="ml-6">
+                  <label className="mb-1 block text-xs text-muted-foreground">
+                    Image style
+                  </label>
+                  <select
+                    value={imageStyle}
+                    onChange={(e) => setImageStyle(e.target.value as typeof imageStyle)}
+                    disabled={busy}
+                    className="w-full rounded-md border bg-background px-2 py-1 text-sm"
+                  >
+                    <option value="cartoon">Cartoon (flat, friendly)</option>
+                    <option value="realistic">Realistic photo</option>
+                    <option value="watercolor">Watercolor painting</option>
+                    <option value="3d">3D render (Pixar-like)</option>
+                    <option value="pixel">Pixel art (16-bit)</option>
+                    <option value="line">Minimal line drawing</option>
+                    <option value="anime">Anime / manga</option>
+                    <option value="sketch">Pencil sketch</option>
+                  </select>
+                </div>
+              )}
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
