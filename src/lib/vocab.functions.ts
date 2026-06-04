@@ -3,7 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 const ExtractInput = z.object({
-  text: z.string().min(1).max(200_000),
+  text: z.string().min(1).max(2_000_000),
   maxWords: z.number().min(1).max(3000).default(50),
 });
 
