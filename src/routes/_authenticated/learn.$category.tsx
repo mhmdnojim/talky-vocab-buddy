@@ -186,7 +186,7 @@ function Learn() {
     if (!cur) return;
     setRegenerating(true);
     try {
-      const res = await regenImage({ data: { word: cur.word } });
+      const res = await regenImage({ data: { word: cur.word, style: imageStyle } });
       const newImage = res.dataUrl;
       setWords((prev) =>
         prev ? prev.map((w, i) => (i === idx ? { ...w, image: newImage } : w)) : prev,
