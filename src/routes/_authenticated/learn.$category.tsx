@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
@@ -20,10 +20,9 @@ import {
   type Category,
 } from "@/data/vocabulary";
 import { speak, langLabelToBcp47 } from "@/lib/speak";
-import { getCategoryBySlug, listWords, updateWordImage } from "@/lib/customVocab";
+import { getCategoryBySlug, listWords, updateWordImage, listCategories, type CustomCategory } from "@/lib/customVocab";
 import { generateVocabImage, translateWords, IMAGE_STYLES, type ImageStyle } from "@/lib/vocab.functions";
 import { useServerFn } from "@tanstack/react-start";
-import { WordsManager } from "@/components/WordsManager";
 import { RubyText } from "@/components/RubyText";
 
 const LANGUAGES = [
