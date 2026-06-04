@@ -110,6 +110,7 @@ export const Route = createFileRoute("/_authenticated/learn/$category")({
 function Learn() {
   const { category } = Route.useParams();
   const [words, setWords] = useState<DisplayWord[] | null>(null);
+  const [patchSize, setPatchSize] = useState<number>(DEFAULT_PATCH_SIZE);
   const [title, setTitle] = useState<string>("Vocabulary");
   const [loadError, setLoadError] = useState<string | null>(null);
 
