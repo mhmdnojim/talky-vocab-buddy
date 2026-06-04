@@ -129,6 +129,10 @@ function Learn() {
   const [translationPinyin, setTranslationPinyin] = useState<Record<string, string[] | null>>({});
   const [translating, setTranslating] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
+  const [imageStyle, setImageStyle] = useState<ImageStyle>(() => {
+    if (typeof window === "undefined") return "cartoon";
+    return (localStorage.getItem("vocab-image-style") as ImageStyle) || "cartoon";
+  });
   const translate = useServerFn(translateWords);
   const regenImage = useServerFn(generateVocabImage);
 
