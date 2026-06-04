@@ -16,6 +16,7 @@ import {
 } from "@/lib/customVocab";
 
 export const Route = createFileRoute("/_authenticated/upload")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Add Vocabulary — AI Extract & Illustrate" },
