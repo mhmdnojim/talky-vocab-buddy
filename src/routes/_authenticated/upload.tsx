@@ -75,6 +75,8 @@ function UploadPage() {
   const [progress, setProgress] = useState<WordProgress[]>([]);
   const [statusMsg, setStatusMsg] = useState("");
   const [extractLog, setExtractLog] = useState<string[]>([]);
+  const [extractProgress, setExtractProgress] = useState<{ done: number; total: number }>({ done: 0, total: 0 });
+
 
   // User-configurable
   const [maxTotal, setMaxTotal] = useState(40); // total words to extract / generate
@@ -92,6 +94,8 @@ function UploadPage() {
     setProgress([]);
     setExtractLog([]);
     setStatusMsg("");
+
+    setExtractProgress({ done: 0, total: 1 });
 
     try {
       // 1. Get the word list
@@ -126,6 +130,7 @@ function UploadPage() {
           5,
           Math.min(EXTRACT_PER_CALL, Math.ceil(maxTotal / textChunks.length)),
         );
+        setExtractProgress({ done: 0, total: textChunks.length });
         setExtractLog((l) => [
           ...l,
           `✂️ Split text into ${textChunks.length} chunk${textChunks.length > 1 ? "s" : ""} (~${perChunk} words each)`,
@@ -155,6 +160,7 @@ function UploadPage() {
               `⚠️ Chunk ${i + 1} failed: ${e?.message ?? "error"} — continuing`,
             ]);
           }
+          setExtractProgress({ done: i + 1, total: textChunks.length });
         }
         words = words.slice(0, maxTotal);
       } else {
@@ -162,6 +168,7 @@ function UploadPage() {
         setExtractLog([`✨ Generating words for topic: "${topic.trim()}"`]);
         const numCalls = Math.max(1, Math.ceil(maxTotal / EXTRACT_PER_CALL));
         const perCall = Math.ceil(maxTotal / numCalls);
+        setExtractProgress({ done: 0, total: numCalls });
         setExtractLog((l) => [
           ...l,
           `📦 ${numCalls} AI call${numCalls > 1 ? "s" : ""} of ~${perCall} words each`,
@@ -190,14 +197,14 @@ function UploadPage() {
               `⚠️ Call ${i + 1} failed: ${e?.message ?? "error"} — continuing`,
             ]);
           }
+          setExtractProgress({ done: i + 1, total: numCalls });
         }
         words = words.slice(0, maxTotal);
       }
       if (!words.length) throw new Error("AI did not return any words.");
       setExtractLog((l) => [...l, `🎉 Extracted ${words.length} unique words`]);
 
-      // 2. Split into batches → one category per batch
-      const batches = chunk(words, maxPerBatch);
+      // 2. Single category — patches are just visual groupings of `maxPerBatch`
       setProgress(
         words.map((w, i) => ({
           word: w.word,
@@ -208,57 +215,44 @@ function UploadPage() {
       );
       setStatus("generating");
 
-      let firstSlug: string | null = null;
-      let globalIdx = 0;
+      setStatusMsg(`Creating category: ${label.trim()}`);
+      const category = await createCategory({ label: label.trim(), emoji });
+      const firstSlug = category.slug;
 
-      for (let b = 0; b < batches.length; b++) {
-        const batch = batches[b];
-        const batchLabel =
-          batches.length === 1 ? label.trim() : `${label.trim()} ${b + 1}`;
+      // Insert all words (no image yet) so user can already browse
+      for (let i = 0; i < words.length; i++) {
+        await insertWord({
+          category_id: category.id,
+          word: words[i].word,
+          ipa: words[i].ipa,
+          image_url: null,
+          position: i,
+        });
+      }
+      const rows = await listWords(category.id);
+
+      // Generate images for each word
+      for (let i = 0; i < rows.length; i++) {
+        const patchNum = Math.floor(i / maxPerBatch) + 1;
+        const totalPatches = Math.ceil(rows.length / maxPerBatch);
         setStatusMsg(
-          `Creating batch ${b + 1} of ${batches.length}: ${batchLabel}`,
+          `Patch ${patchNum}/${totalPatches} — illustrating "${rows[i].word}"`,
         );
-        const category = await createCategory({ label: batchLabel, emoji });
-        if (b === 0) firstSlug = category.slug;
-
-        // Insert words (no image yet) so user can already browse
-        for (let i = 0; i < batch.length; i++) {
-          await insertWord({
-            category_id: category.id,
-            word: batch[i].word,
-            ipa: batch[i].ipa,
-            image_url: null,
-            position: i,
-          });
-        }
-        const rows = await listWords(category.id);
-
-        // Generate images for this batch
-        for (let i = 0; i < rows.length; i++) {
-          const idxInProgress = globalIdx + i;
+        setProgress((prev) =>
+          prev.map((p, idx) => (idx === i ? { ...p, status: "generating" } : p)),
+        );
+        try {
+          const { dataUrl } = await imageFn({ data: { word: rows[i].word } });
+          await updateWordImage(rows[i].id, dataUrl);
           setProgress((prev) =>
-            prev.map((p, idx) =>
-              idx === idxInProgress ? { ...p, status: "generating" } : p,
-            ),
+            prev.map((p, idx) => (idx === i ? { ...p, status: "done" } : p)),
           );
-          try {
-            const { dataUrl } = await imageFn({ data: { word: rows[i].word } });
-            await updateWordImage(rows[i].id, dataUrl);
-            setProgress((prev) =>
-              prev.map((p, idx) =>
-                idx === idxInProgress ? { ...p, status: "done" } : p,
-              ),
-            );
-          } catch (err) {
-            console.error("image gen failed for", rows[i].word, err);
-            setProgress((prev) =>
-              prev.map((p, idx) =>
-                idx === idxInProgress ? { ...p, status: "failed" } : p,
-              ),
-            );
-          }
+        } catch (err) {
+          console.error("image gen failed for", rows[i].word, err);
+          setProgress((prev) =>
+            prev.map((p, idx) => (idx === i ? { ...p, status: "failed" } : p)),
+          );
         }
-        globalIdx += batch.length;
       }
 
       setStatus("done");
@@ -276,6 +270,7 @@ function UploadPage() {
       setStatus("error");
     }
   };
+
 
   return (
     <div className="min-h-screen bg-background pb-16">
@@ -407,9 +402,10 @@ function UploadPage() {
             />
             <p className="mt-1 text-xs text-muted-foreground">
               {maxTotal > maxPerBatch
-                ? `Will create ${Math.ceil(maxTotal / maxPerBatch)} categories of up to ${maxPerBatch} words each.`
-                : "All words fit in a single category."}
+                ? `Words will be grouped into ${Math.ceil(maxTotal / maxPerBatch)} patches of up to ${maxPerBatch} inside one category.`
+                : "All words fit in a single patch."}
             </p>
+
           </div>
 
           {mode === "file" && (
@@ -454,19 +450,49 @@ function UploadPage() {
           )}
         </form>
 
-        {extractLog.length > 0 && <ExtractLogPanel log={extractLog} />}
+        {extractLog.length > 0 && (
+          <ExtractLogPanel log={extractLog} progress={extractProgress} />
+        )}
         {progress.length > 0 && <ProgressPanel progress={progress} />}
       </main>
     </div>
   );
 }
-function ExtractLogPanel({ log }: { log: string[] }) {
+function ExtractLogPanel({
+  log,
+  progress,
+}: {
+  log: string[];
+  progress: { done: number; total: number };
+}) {
+  const pct = progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0;
   return (
     <div className="mt-6 rounded-xl border-2 border-border bg-card p-4">
-      <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
-        <Sparkles className="h-4 w-4 text-primary" />
-        AI extraction log
+      <div className="mb-2 flex items-center justify-between text-sm font-semibold">
+        <span className="flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-primary" />
+          AI extraction
+        </span>
+        {progress.total > 0 && (
+          <span className="text-xs font-normal text-muted-foreground">
+            {progress.done}/{progress.total} ({pct}%)
+          </span>
+        )}
       </div>
+      {progress.total > 0 && (
+        <div
+          role="progressbar"
+          aria-valuenow={pct}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          className="mb-3 h-2 w-full overflow-hidden rounded-full bg-muted"
+        >
+          <div
+            className="h-full bg-primary transition-all duration-300"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      )}
       <ul className="max-h-60 space-y-1 overflow-y-auto font-mono text-xs text-muted-foreground">
         {log.map((line, i) => (
           <li key={i} className={i === log.length - 1 ? "text-foreground" : ""}>
@@ -477,6 +503,7 @@ function ExtractLogPanel({ log }: { log: string[] }) {
     </div>
   );
 }
+
 
 
 function ProgressPanel({ progress }: { progress: WordProgress[] }) {
@@ -505,11 +532,23 @@ function ProgressPanel({ progress }: { progress: WordProgress[] }) {
         {progress.map((p, i) => {
           const prevBatch = i > 0 ? progress[i - 1].batchIndex : -1;
           const isNewBatch = p.batchIndex !== prevBatch;
+          const patchWords = progress.filter((x) => x.batchIndex === p.batchIndex);
+          const patchDone = patchWords.every(
+            (x) => x.status === "done" || x.status === "failed",
+          );
           return (
             <li key={i}>
               {isNewBatch && (
-                <div className="mt-2 mb-1 text-xs font-semibold text-primary">
-                  Batch {p.batchIndex + 1}
+                <div className="mt-2 mb-1 flex items-center gap-2 text-xs font-semibold text-primary">
+                  <span>Patch {p.batchIndex + 1}</span>
+                  {patchDone && (
+                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                      <Check className="h-3 w-3" />
+                    </span>
+                  )}
+                  <span className="text-[10px] font-normal text-muted-foreground">
+                    ({patchWords.filter((x) => x.status === "done").length}/{patchWords.length})
+                  </span>
                 </div>
               )}
               <div className="flex items-center justify-between gap-2">
@@ -531,6 +570,7 @@ function ProgressPanel({ progress }: { progress: WordProgress[] }) {
           );
         })}
       </ul>
+
     </div>
   );
 }
