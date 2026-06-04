@@ -18,10 +18,9 @@ import {
 import { CATEGORIES, VOCABULARY, type Category } from "@/data/vocabulary";
 import {
   listCategories,
-  listWords,
   deleteCategory,
-  type CustomCategory,
 } from "@/lib/customVocab";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Props {
   currentCategorySlug: string;
@@ -52,17 +51,34 @@ export function WordsManager({ currentCategorySlug, onChanged }: Props) {
         isCustom: false,
         count: VOCABULARY.filter((v) => v.category === (c.id as Category)).length,
       }));
-      const custom = await listCategories();
+      // Show built-ins immediately so the list is never empty if custom fetch fails.
+      setCats(builtin);
+
+      let custom: Awaited<ReturnType<typeof listCategories>> = [];
+      try {
+        custom = await listCategories();
+      } catch (e) {
+        console.error("listCategories failed", e);
+      }
       const customBlocks: CatBlock[] = await Promise.all(
         custom.map(async (c) => {
-          const rows = await listWords(c.id);
+          let count = 0;
+          try {
+            const { count: n } = await supabase
+              .from("custom_words")
+              .select("id", { count: "exact", head: true })
+              .eq("category_id", c.id);
+            count = n ?? 0;
+          } catch (e) {
+            console.error("count failed for", c.slug, e);
+          }
           return {
             slug: c.slug,
             label: c.label,
             emoji: c.emoji,
             isCustom: true,
             customId: c.id,
-            count: rows.length,
+            count,
           };
         }),
       );
