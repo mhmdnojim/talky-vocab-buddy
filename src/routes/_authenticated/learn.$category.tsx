@@ -228,6 +228,7 @@ function Learn() {
           const rows = await listWords(cat.id);
           if (cancelled) return;
           setTitle(`${cat.emoji} ${cat.label}`);
+          setPatchSize(cat.words_per_patch && cat.words_per_patch > 0 ? cat.words_per_patch : DEFAULT_PATCH_SIZE);
           setWords(
             rows.map((r) => ({
               id: r.id,
