@@ -92,26 +92,106 @@ function UploadPage() {
 
     try {
       // 1. Get the word list
-      let words: { word: string; ipa: string }[];
+      let words: { word: string; ipa: string }[] = [];
+      const seen = new Set<string>();
+      const pushUnique = (arr: { word: string; ipa: string }[]) => {
+        for (const w of arr) {
+          const k = w.word.trim().toLowerCase();
+          if (!k || seen.has(k)) continue;
+          seen.add(k);
+          words.push({ word: w.word.trim(), ipa: w.ipa });
+        }
+      };
+
+      const EXTRACT_PER_CALL = 40; // keep each AI call short to avoid timeouts
+
       if (mode === "file") {
         setStatus("parsing");
         setStatusMsg("Reading file…");
+        setExtractLog(["📄 Reading file…"]);
         const text = await parseFileToText(file!);
         if (!text.trim())
           throw new Error("No text could be extracted from that file.");
+
         setStatus("extracting");
-        setStatusMsg("AI extracting words…");
-        const res = await extractFn({ data: { text, maxWords: maxTotal } });
-        words = res.words;
+        const CHUNK_CHARS = 6000;
+        const textChunks: string[] = [];
+        for (let i = 0; i < text.length; i += CHUNK_CHARS) {
+          textChunks.push(text.slice(i, i + CHUNK_CHARS));
+        }
+        const perChunk = Math.max(
+          5,
+          Math.min(EXTRACT_PER_CALL, Math.ceil(maxTotal / textChunks.length)),
+        );
+        setExtractLog((l) => [
+          ...l,
+          `✂️ Split text into ${textChunks.length} chunk${textChunks.length > 1 ? "s" : ""} (~${perChunk} words each)`,
+        ]);
+
+        for (let i = 0; i < textChunks.length && words.length < maxTotal; i++) {
+          setStatusMsg(
+            `AI extracting chunk ${i + 1}/${textChunks.length} — ${words.length}/${maxTotal} words so far`,
+          );
+          setExtractLog((l) => [
+            ...l,
+            `🤖 Chunk ${i + 1}/${textChunks.length}: asking AI for up to ${perChunk} words…`,
+          ]);
+          try {
+            const res = await extractFn({
+              data: { text: textChunks[i], maxWords: perChunk },
+            });
+            const before = words.length;
+            pushUnique(res.words);
+            setExtractLog((l) => [
+              ...l,
+              `✅ Chunk ${i + 1}: +${words.length - before} new (total ${words.length})`,
+            ]);
+          } catch (e: any) {
+            setExtractLog((l) => [
+              ...l,
+              `⚠️ Chunk ${i + 1} failed: ${e?.message ?? "error"} — continuing`,
+            ]);
+          }
+        }
+        words = words.slice(0, maxTotal);
       } else {
         setStatus("extracting");
-        setStatusMsg("AI generating words…");
-        const res = await topicFn({
-          data: { topic: topic.trim(), count: maxTotal },
-        });
-        words = res.words;
+        setExtractLog([`✨ Generating words for topic: "${topic.trim()}"`]);
+        const numCalls = Math.max(1, Math.ceil(maxTotal / EXTRACT_PER_CALL));
+        const perCall = Math.ceil(maxTotal / numCalls);
+        setExtractLog((l) => [
+          ...l,
+          `📦 ${numCalls} AI call${numCalls > 1 ? "s" : ""} of ~${perCall} words each`,
+        ]);
+        for (let i = 0; i < numCalls && words.length < maxTotal; i++) {
+          setStatusMsg(
+            `AI generating batch ${i + 1}/${numCalls} — ${words.length}/${maxTotal} so far`,
+          );
+          setExtractLog((l) => [
+            ...l,
+            `🤖 Call ${i + 1}/${numCalls}: asking AI for ${perCall} words…`,
+          ]);
+          try {
+            const res = await topicFn({
+              data: { topic: topic.trim(), count: perCall },
+            });
+            const before = words.length;
+            pushUnique(res.words);
+            setExtractLog((l) => [
+              ...l,
+              `✅ Call ${i + 1}: +${words.length - before} new (total ${words.length})`,
+            ]);
+          } catch (e: any) {
+            setExtractLog((l) => [
+              ...l,
+              `⚠️ Call ${i + 1} failed: ${e?.message ?? "error"} — continuing`,
+            ]);
+          }
+        }
+        words = words.slice(0, maxTotal);
       }
       if (!words.length) throw new Error("AI did not return any words.");
+      setExtractLog((l) => [...l, `🎉 Extracted ${words.length} unique words`]);
 
       // 2. Split into batches → one category per batch
       const batches = chunk(words, maxPerBatch);
