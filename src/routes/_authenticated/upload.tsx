@@ -402,9 +402,10 @@ function UploadPage() {
             />
             <p className="mt-1 text-xs text-muted-foreground">
               {maxTotal > maxPerBatch
-                ? `Will create ${Math.ceil(maxTotal / maxPerBatch)} categories of up to ${maxPerBatch} words each.`
-                : "All words fit in a single category."}
+                ? `Words will be grouped into ${Math.ceil(maxTotal / maxPerBatch)} patches of up to ${maxPerBatch} inside one category.`
+                : "All words fit in a single patch."}
             </p>
+
           </div>
 
           {mode === "file" && (
