@@ -101,6 +101,9 @@ function UploadPage() {
   const [maxTotal, setMaxTotal] = useState(40);
   const [maxPerBatch, setMaxPerBatch] = useState(20);
   const [doImages, setDoImages] = useState(true);
+  const [imageStyle, setImageStyle] = useState<
+    "cartoon" | "realistic" | "watercolor" | "3d" | "pixel" | "line" | "anime" | "sketch"
+  >("cartoon");
   const [doAudio, setDoAudio] = useState(false);
   const [doExample, setDoExample] = useState(false);
 
