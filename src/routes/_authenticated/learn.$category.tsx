@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
@@ -20,10 +20,9 @@ import {
   type Category,
 } from "@/data/vocabulary";
 import { speak, langLabelToBcp47 } from "@/lib/speak";
-import { getCategoryBySlug, listWords, updateWordImage } from "@/lib/customVocab";
+import { getCategoryBySlug, listWords, updateWordImage, listCategories, type CustomCategory } from "@/lib/customVocab";
 import { generateVocabImage, translateWords, IMAGE_STYLES, type ImageStyle } from "@/lib/vocab.functions";
 import { useServerFn } from "@tanstack/react-start";
-import { WordsManager } from "@/components/WordsManager";
 import { RubyText } from "@/components/RubyText";
 
 const LANGUAGES = [
@@ -133,8 +132,18 @@ function Learn() {
     if (typeof window === "undefined") return "cartoon";
     return (localStorage.getItem("vocab-image-style") as ImageStyle) || "cartoon";
   });
+  const [customCats, setCustomCats] = useState<CustomCategory[]>([]);
+  const navigate = useNavigate();
   const translate = useServerFn(translateWords);
   const regenImage = useServerFn(generateVocabImage);
+
+  useEffect(() => {
+    let cancelled = false;
+    listCategories()
+      .then((rows) => { if (!cancelled) setCustomCats(rows); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [reloadKey]);
 
   // Translate all words when words or language changes
   useEffect(() => {
@@ -399,10 +408,33 @@ function Learn() {
               </option>
             ))}
           </select>
-          <WordsManager
-            currentCategorySlug={category}
-            onChanged={() => setReloadKey((k) => k + 1)}
-          />
+          <select
+            value={category}
+            onChange={(e) => {
+              const slug = e.target.value;
+              if (slug !== category) navigate({ to: "/learn/$category", params: { category: slug } });
+            }}
+            className="h-9 max-w-[140px] rounded-full border-2 border-primary-foreground/80 bg-primary px-2 text-xs font-medium text-primary-foreground focus:outline-none"
+            aria-label="Category"
+            title="Switch category"
+          >
+            <optgroup label="Built-in" className="text-foreground">
+              {CATEGORIES.map((c) => (
+                <option key={c.id} value={c.id} className="text-foreground">
+                  {c.emoji} {c.label}
+                </option>
+              ))}
+            </optgroup>
+            {customCats.length > 0 && (
+              <optgroup label="My categories" className="text-foreground">
+                {customCats.map((c) => (
+                  <option key={c.id} value={c.slug} className="text-foreground">
+                    {c.emoji} {c.label}
+                  </option>
+                ))}
+              </optgroup>
+            )}
+          </select>
           <select
             value={targetLang}
             onChange={(e) => changeLang(e.target.value)}
