@@ -398,6 +398,14 @@ function Learn() {
       </header>
 
       <main className="mx-auto w-full max-w-xl flex-1 px-3 pb-8 pt-4">
+        {words.length > patchSize && (
+          <PatchTabs
+            total={words.length}
+            patchSize={patchSize}
+            currentIdx={idx}
+            onJump={(i) => setIdx(i)}
+          />
+        )}
         <div
           className="relative overflow-hidden rounded-2xl bg-card shadow-sm"
           onTouchStart={onTouchStart}
