@@ -110,6 +110,36 @@ export async function updateWordImage(id: string, image_url: string): Promise<vo
   if (error) throw error;
 }
 
+export async function updateWordAudio(id: string, audio_url: string): Promise<void> {
+  const { error } = await supabase
+    .from("custom_words")
+    .update({ audio_url })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+export async function updateWordExample(id: string, example: string): Promise<void> {
+  const { error } = await supabase
+    .from("custom_words")
+    .update({ example })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+export async function createCategoryWithPatch(input: {
+  label: string;
+  emoji: string;
+  words_per_patch: number;
+}): Promise<CustomCategory> {
+  const cat = await createCategory({ label: input.label, emoji: input.emoji });
+  const { error } = await supabase
+    .from("custom_categories")
+    .update({ words_per_patch: input.words_per_patch })
+    .eq("id", cat.id);
+  if (error) throw error;
+  return { ...cat, words_per_patch: input.words_per_patch };
+}
+
 export async function deleteCategory(id: string): Promise<void> {
   // Words are owned per-user too; remove them first since there's no FK cascade.
   await supabase.from("custom_words").delete().eq("category_id", id);
