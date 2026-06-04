@@ -21,7 +21,7 @@ import {
 } from "@/data/vocabulary";
 import { speak, langLabelToBcp47 } from "@/lib/speak";
 import { getCategoryBySlug, listWords, updateWordImage } from "@/lib/customVocab";
-import { generateVocabImage, translateWords } from "@/lib/vocab.functions";
+import { generateVocabImage, translateWords, IMAGE_STYLES, type ImageStyle } from "@/lib/vocab.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { WordsManager } from "@/components/WordsManager";
 import { RubyText } from "@/components/RubyText";
@@ -129,6 +129,10 @@ function Learn() {
   const [translationPinyin, setTranslationPinyin] = useState<Record<string, string[] | null>>({});
   const [translating, setTranslating] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
+  const [imageStyle, setImageStyle] = useState<ImageStyle>(() => {
+    if (typeof window === "undefined") return "cartoon";
+    return (localStorage.getItem("vocab-image-style") as ImageStyle) || "cartoon";
+  });
   const translate = useServerFn(translateWords);
   const regenImage = useServerFn(generateVocabImage);
 
@@ -182,7 +186,7 @@ function Learn() {
     if (!cur) return;
     setRegenerating(true);
     try {
-      const res = await regenImage({ data: { word: cur.word } });
+      const res = await regenImage({ data: { word: cur.word, style: imageStyle } });
       const newImage = res.dataUrl;
       setWords((prev) =>
         prev ? prev.map((w, i) => (i === idx ? { ...w, image: newImage } : w)) : prev,
@@ -378,6 +382,23 @@ function Learn() {
           >
             {autoplay ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 fill-current" />}
           </button>
+          <select
+            value={imageStyle}
+            onChange={(e) => {
+              const v = e.target.value as ImageStyle;
+              setImageStyle(v);
+              try { localStorage.setItem("vocab-image-style", v); } catch { /* ignore */ }
+            }}
+            className="h-9 rounded-full border-2 border-primary-foreground/80 bg-primary px-2 text-xs font-medium text-primary-foreground focus:outline-none capitalize"
+            aria-label="Image style"
+            title="Image style for regeneration"
+          >
+            {Object.keys(IMAGE_STYLES).map((s) => (
+              <option key={s} value={s} className="text-foreground capitalize">
+                {s}
+              </option>
+            ))}
+          </select>
           <WordsManager
             currentCategorySlug={category}
             onChanged={() => setReloadKey((k) => k + 1)}
