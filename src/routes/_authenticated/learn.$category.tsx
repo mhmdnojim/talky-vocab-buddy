@@ -132,8 +132,18 @@ function Learn() {
     if (typeof window === "undefined") return "cartoon";
     return (localStorage.getItem("vocab-image-style") as ImageStyle) || "cartoon";
   });
+  const [customCats, setCustomCats] = useState<CustomCategory[]>([]);
+  const navigate = useNavigate();
   const translate = useServerFn(translateWords);
   const regenImage = useServerFn(generateVocabImage);
+
+  useEffect(() => {
+    let cancelled = false;
+    listCategories()
+      .then((rows) => { if (!cancelled) setCustomCats(rows); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [reloadKey]);
 
   // Translate all words when words or language changes
   useEffect(() => {
