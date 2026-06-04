@@ -93,6 +93,8 @@ function UploadPage() {
     setExtractLog([]);
     setStatusMsg("");
 
+    setExtractProgress({ done: 0, total: 1 });
+
     try {
       // 1. Get the word list
       let words: { word: string; ipa: string }[] = [];
@@ -126,6 +128,7 @@ function UploadPage() {
           5,
           Math.min(EXTRACT_PER_CALL, Math.ceil(maxTotal / textChunks.length)),
         );
+        setExtractProgress({ done: 0, total: textChunks.length });
         setExtractLog((l) => [
           ...l,
           `✂️ Split text into ${textChunks.length} chunk${textChunks.length > 1 ? "s" : ""} (~${perChunk} words each)`,
@@ -155,6 +158,7 @@ function UploadPage() {
               `⚠️ Chunk ${i + 1} failed: ${e?.message ?? "error"} — continuing`,
             ]);
           }
+          setExtractProgress({ done: i + 1, total: textChunks.length });
         }
         words = words.slice(0, maxTotal);
       } else {
@@ -162,6 +166,7 @@ function UploadPage() {
         setExtractLog([`✨ Generating words for topic: "${topic.trim()}"`]);
         const numCalls = Math.max(1, Math.ceil(maxTotal / EXTRACT_PER_CALL));
         const perCall = Math.ceil(maxTotal / numCalls);
+        setExtractProgress({ done: 0, total: numCalls });
         setExtractLog((l) => [
           ...l,
           `📦 ${numCalls} AI call${numCalls > 1 ? "s" : ""} of ~${perCall} words each`,
@@ -190,14 +195,14 @@ function UploadPage() {
               `⚠️ Call ${i + 1} failed: ${e?.message ?? "error"} — continuing`,
             ]);
           }
+          setExtractProgress({ done: i + 1, total: numCalls });
         }
         words = words.slice(0, maxTotal);
       }
       if (!words.length) throw new Error("AI did not return any words.");
       setExtractLog((l) => [...l, `🎉 Extracted ${words.length} unique words`]);
 
-      // 2. Split into batches → one category per batch
-      const batches = chunk(words, maxPerBatch);
+      // 2. Single category — patches are just visual groupings of `maxPerBatch`
       setProgress(
         words.map((w, i) => ({
           word: w.word,
@@ -208,57 +213,44 @@ function UploadPage() {
       );
       setStatus("generating");
 
-      let firstSlug: string | null = null;
-      let globalIdx = 0;
+      setStatusMsg(`Creating category: ${label.trim()}`);
+      const category = await createCategory({ label: label.trim(), emoji });
+      const firstSlug = category.slug;
 
-      for (let b = 0; b < batches.length; b++) {
-        const batch = batches[b];
-        const batchLabel =
-          batches.length === 1 ? label.trim() : `${label.trim()} ${b + 1}`;
+      // Insert all words (no image yet) so user can already browse
+      for (let i = 0; i < words.length; i++) {
+        await insertWord({
+          category_id: category.id,
+          word: words[i].word,
+          ipa: words[i].ipa,
+          image_url: null,
+          position: i,
+        });
+      }
+      const rows = await listWords(category.id);
+
+      // Generate images for each word
+      for (let i = 0; i < rows.length; i++) {
+        const patchNum = Math.floor(i / maxPerBatch) + 1;
+        const totalPatches = Math.ceil(rows.length / maxPerBatch);
         setStatusMsg(
-          `Creating batch ${b + 1} of ${batches.length}: ${batchLabel}`,
+          `Patch ${patchNum}/${totalPatches} — illustrating "${rows[i].word}"`,
         );
-        const category = await createCategory({ label: batchLabel, emoji });
-        if (b === 0) firstSlug = category.slug;
-
-        // Insert words (no image yet) so user can already browse
-        for (let i = 0; i < batch.length; i++) {
-          await insertWord({
-            category_id: category.id,
-            word: batch[i].word,
-            ipa: batch[i].ipa,
-            image_url: null,
-            position: i,
-          });
-        }
-        const rows = await listWords(category.id);
-
-        // Generate images for this batch
-        for (let i = 0; i < rows.length; i++) {
-          const idxInProgress = globalIdx + i;
+        setProgress((prev) =>
+          prev.map((p, idx) => (idx === i ? { ...p, status: "generating" } : p)),
+        );
+        try {
+          const { dataUrl } = await imageFn({ data: { word: rows[i].word } });
+          await updateWordImage(rows[i].id, dataUrl);
           setProgress((prev) =>
-            prev.map((p, idx) =>
-              idx === idxInProgress ? { ...p, status: "generating" } : p,
-            ),
+            prev.map((p, idx) => (idx === i ? { ...p, status: "done" } : p)),
           );
-          try {
-            const { dataUrl } = await imageFn({ data: { word: rows[i].word } });
-            await updateWordImage(rows[i].id, dataUrl);
-            setProgress((prev) =>
-              prev.map((p, idx) =>
-                idx === idxInProgress ? { ...p, status: "done" } : p,
-              ),
-            );
-          } catch (err) {
-            console.error("image gen failed for", rows[i].word, err);
-            setProgress((prev) =>
-              prev.map((p, idx) =>
-                idx === idxInProgress ? { ...p, status: "failed" } : p,
-              ),
-            );
-          }
+        } catch (err) {
+          console.error("image gen failed for", rows[i].word, err);
+          setProgress((prev) =>
+            prev.map((p, idx) => (idx === i ? { ...p, status: "failed" } : p)),
+          );
         }
-        globalIdx += batch.length;
       }
 
       setStatus("done");
@@ -276,6 +268,7 @@ function UploadPage() {
       setStatus("error");
     }
   };
+
 
   return (
     <div className="min-h-screen bg-background pb-16">
