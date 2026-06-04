@@ -453,6 +453,7 @@ function UploadPage() {
           )}
         </form>
 
+        {extractLog.length > 0 && <ExtractLogPanel log={extractLog} />}
         {progress.length > 0 && <ProgressPanel progress={progress} />}
       </main>
     </div>
