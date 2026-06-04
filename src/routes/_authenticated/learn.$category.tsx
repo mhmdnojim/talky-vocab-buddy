@@ -408,10 +408,33 @@ function Learn() {
               </option>
             ))}
           </select>
-          <WordsManager
-            currentCategorySlug={category}
-            onChanged={() => setReloadKey((k) => k + 1)}
-          />
+          <select
+            value={category}
+            onChange={(e) => {
+              const slug = e.target.value;
+              if (slug !== category) navigate({ to: "/learn/$category", params: { category: slug } });
+            }}
+            className="h-9 max-w-[140px] rounded-full border-2 border-primary-foreground/80 bg-primary px-2 text-xs font-medium text-primary-foreground focus:outline-none"
+            aria-label="Category"
+            title="Switch category"
+          >
+            <optgroup label="Built-in" className="text-foreground">
+              {CATEGORIES.map((c) => (
+                <option key={c.id} value={c.id} className="text-foreground">
+                  {c.emoji} {c.label}
+                </option>
+              ))}
+            </optgroup>
+            {customCats.length > 0 && (
+              <optgroup label="My categories" className="text-foreground">
+                {customCats.map((c) => (
+                  <option key={c.id} value={c.slug} className="text-foreground">
+                    {c.emoji} {c.label}
+                  </option>
+                ))}
+              </optgroup>
+            )}
+          </select>
           <select
             value={targetLang}
             onChange={(e) => changeLang(e.target.value)}
