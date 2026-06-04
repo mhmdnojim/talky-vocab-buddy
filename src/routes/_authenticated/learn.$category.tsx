@@ -583,3 +583,42 @@ function VoiceControls({ word }: { word: string }) {
     </div>
   );
 }
+
+function PatchTabs({
+  total,
+  patchSize,
+  currentIdx,
+  onJump,
+}: {
+  total: number;
+  patchSize: number;
+  currentIdx: number;
+  onJump: (i: number) => void;
+}) {
+  const count = Math.ceil(total / patchSize);
+  const currentPatch = Math.floor(currentIdx / patchSize);
+  return (
+    <div className="mb-3 flex flex-wrap gap-1.5">
+      {Array.from({ length: count }, (_, p) => {
+        const start = p * patchSize;
+        const end = Math.min(start + patchSize, total);
+        const active = p === currentPatch;
+        return (
+          <button
+            key={p}
+            type="button"
+            onClick={() => onJump(start)}
+            aria-label={`Patch ${p + 1} (words ${start + 1}–${end})`}
+            className={`flex h-8 min-w-8 items-center justify-center rounded-full border-2 px-2.5 text-xs font-semibold transition ${
+              active
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-border bg-card text-foreground hover:border-primary"
+            }`}
+          >
+            {p + 1}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
