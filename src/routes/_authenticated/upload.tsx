@@ -268,7 +268,7 @@ function UploadPage() {
 
         if (doImages) {
           try {
-            const { dataUrl } = await imageFn({ data: { word: row.word } });
+            const { dataUrl } = await imageFn({ data: { word: row.word, style: imageStyle } });
             await updateWordImage(row.id, dataUrl);
             updateWord(i, { image: "done" });
           } catch (err) {
