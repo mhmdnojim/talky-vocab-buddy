@@ -147,7 +147,7 @@ export async function exportAllUserData() {
 
   const { data: words, error: wordErr } = await supabase
     .from("custom_words")
-    .select("id, category_id, word, ipa, image_url, position, created_at")
+    .select("id, category_id, word, ipa, image_url, audio_url, example, position, created_at")
     .order("position", { ascending: true });
   if (wordErr) throw wordErr;
 
