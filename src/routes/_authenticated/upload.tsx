@@ -89,6 +89,7 @@ function UploadPage() {
     if (mode === "topic" && !topic.trim()) return;
     setError(null);
     setProgress([]);
+    setExtractLog([]);
     setStatusMsg("");
 
     try {
