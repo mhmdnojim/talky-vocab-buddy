@@ -382,6 +382,23 @@ function Learn() {
           >
             {autoplay ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 fill-current" />}
           </button>
+          <select
+            value={imageStyle}
+            onChange={(e) => {
+              const v = e.target.value as ImageStyle;
+              setImageStyle(v);
+              try { localStorage.setItem("vocab-image-style", v); } catch { /* ignore */ }
+            }}
+            className="h-9 rounded-full border-2 border-primary-foreground/80 bg-primary px-2 text-xs font-medium text-primary-foreground focus:outline-none capitalize"
+            aria-label="Image style"
+            title="Image style for regeneration"
+          >
+            {Object.keys(IMAGE_STYLES).map((s) => (
+              <option key={s} value={s} className="text-foreground capitalize">
+                {s}
+              </option>
+            ))}
+          </select>
           <WordsManager
             currentCategorySlug={category}
             onChanged={() => setReloadKey((k) => k + 1)}
