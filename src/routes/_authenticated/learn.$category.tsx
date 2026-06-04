@@ -21,7 +21,7 @@ import {
 } from "@/data/vocabulary";
 import { speak, langLabelToBcp47 } from "@/lib/speak";
 import { getCategoryBySlug, listWords, updateWordImage } from "@/lib/customVocab";
-import { generateVocabImage, translateWords } from "@/lib/vocab.functions";
+import { generateVocabImage, translateWords, IMAGE_STYLES, type ImageStyle } from "@/lib/vocab.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { WordsManager } from "@/components/WordsManager";
 import { RubyText } from "@/components/RubyText";
