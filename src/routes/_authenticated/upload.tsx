@@ -449,19 +449,49 @@ function UploadPage() {
           )}
         </form>
 
-        {extractLog.length > 0 && <ExtractLogPanel log={extractLog} />}
+        {extractLog.length > 0 && (
+          <ExtractLogPanel log={extractLog} progress={extractProgress} />
+        )}
         {progress.length > 0 && <ProgressPanel progress={progress} />}
       </main>
     </div>
   );
 }
-function ExtractLogPanel({ log }: { log: string[] }) {
+function ExtractLogPanel({
+  log,
+  progress,
+}: {
+  log: string[];
+  progress: { done: number; total: number };
+}) {
+  const pct = progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0;
   return (
     <div className="mt-6 rounded-xl border-2 border-border bg-card p-4">
-      <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
-        <Sparkles className="h-4 w-4 text-primary" />
-        AI extraction log
+      <div className="mb-2 flex items-center justify-between text-sm font-semibold">
+        <span className="flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-primary" />
+          AI extraction
+        </span>
+        {progress.total > 0 && (
+          <span className="text-xs font-normal text-muted-foreground">
+            {progress.done}/{progress.total} ({pct}%)
+          </span>
+        )}
       </div>
+      {progress.total > 0 && (
+        <div
+          role="progressbar"
+          aria-valuenow={pct}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          className="mb-3 h-2 w-full overflow-hidden rounded-full bg-muted"
+        >
+          <div
+            className="h-full bg-primary transition-all duration-300"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      )}
       <ul className="max-h-60 space-y-1 overflow-y-auto font-mono text-xs text-muted-foreground">
         {log.map((line, i) => (
           <li key={i} className={i === log.length - 1 ? "text-foreground" : ""}>
@@ -472,6 +502,7 @@ function ExtractLogPanel({ log }: { log: string[] }) {
     </div>
   );
 }
+
 
 
 function ProgressPanel({ progress }: { progress: WordProgress[] }) {
