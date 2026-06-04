@@ -6,6 +6,7 @@ export interface CustomCategory {
   slug: string;
   label: string;
   emoji: string;
+  words_per_patch?: number;
 }
 
 export interface CustomWord {
@@ -14,6 +15,8 @@ export interface CustomWord {
   word: string;
   ipa: string;
   image_url: string | null;
+  audio_url: string | null;
+  example: string;
   position: number;
 }
 
