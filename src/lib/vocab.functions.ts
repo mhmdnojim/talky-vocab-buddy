@@ -155,6 +155,31 @@ export const generateWordsForTopic = createServerFn({ method: "POST" })
     return { words };
   });
 
+const ExampleInput = z.object({ word: z.string().min(1).max(120) });
+
+export const generateExampleSentence = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => ExampleInput.parse(input))
+  .handler(async ({ data }) => {
+    const prompt = `Write ONE short, natural English example sentence (max 14 words) that uses the word/phrase "${data.word}". Return ONLY strict JSON: {"sentence":"..."}.`;
+    const result = await callLovableAI({
+      model: "google/gemini-2.5-flash",
+      messages: [
+        { role: "system", content: "You output only valid JSON. No prose." },
+        { role: "user", content: prompt },
+      ],
+      response_format: { type: "json_object" },
+    });
+    const content = result?.choices?.[0]?.message?.content ?? "{}";
+    let parsed: { sentence?: string };
+    try {
+      parsed = JSON.parse(content);
+    } catch {
+      const m = content.match(/\{[\s\S]*\}/);
+      parsed = m ? JSON.parse(m[0]) : {};
+    }
+    return { sentence: (parsed.sentence ?? "").toString().trim() };
+  });
+
 const ImageInput = z.object({ word: z.string().min(1).max(120) });
 
 export const generateVocabImage = createServerFn({ method: "POST" })

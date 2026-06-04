@@ -41,6 +41,8 @@ interface DisplayWord {
   image: string | null;
 }
 
+const DEFAULT_PATCH_SIZE = 20;
+
 export const Route = createFileRoute("/_authenticated/learn/$category")({
   head: ({ params }) => {
     const cat = CATEGORIES.find((c) => c.id === params.category);
@@ -108,6 +110,7 @@ export const Route = createFileRoute("/_authenticated/learn/$category")({
 function Learn() {
   const { category } = Route.useParams();
   const [words, setWords] = useState<DisplayWord[] | null>(null);
+  const [patchSize, setPatchSize] = useState<number>(DEFAULT_PATCH_SIZE);
   const [title, setTitle] = useState<string>("Vocabulary");
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -225,6 +228,7 @@ function Learn() {
           const rows = await listWords(cat.id);
           if (cancelled) return;
           setTitle(`${cat.emoji} ${cat.label}`);
+          setPatchSize(cat.words_per_patch && cat.words_per_patch > 0 ? cat.words_per_patch : DEFAULT_PATCH_SIZE);
           setWords(
             rows.map((r) => ({
               id: r.id,
@@ -394,6 +398,14 @@ function Learn() {
       </header>
 
       <main className="mx-auto w-full max-w-xl flex-1 px-3 pb-8 pt-4">
+        {words.length > patchSize && (
+          <PatchTabs
+            total={words.length}
+            patchSize={patchSize}
+            currentIdx={idx}
+            onJump={(i) => setIdx(i)}
+          />
+        )}
         <div
           className="relative overflow-hidden rounded-2xl bg-card shadow-sm"
           onTouchStart={onTouchStart}
@@ -568,6 +580,45 @@ function VoiceControls({ word }: { word: string }) {
       >
         <Snail className="h-6 w-6 text-primary" />
       </button>
+    </div>
+  );
+}
+
+function PatchTabs({
+  total,
+  patchSize,
+  currentIdx,
+  onJump,
+}: {
+  total: number;
+  patchSize: number;
+  currentIdx: number;
+  onJump: (i: number) => void;
+}) {
+  const count = Math.ceil(total / patchSize);
+  const currentPatch = Math.floor(currentIdx / patchSize);
+  return (
+    <div className="mb-3 flex flex-wrap gap-1.5">
+      {Array.from({ length: count }, (_, p) => {
+        const start = p * patchSize;
+        const end = Math.min(start + patchSize, total);
+        const active = p === currentPatch;
+        return (
+          <button
+            key={p}
+            type="button"
+            onClick={() => onJump(start)}
+            aria-label={`Patch ${p + 1} (words ${start + 1}–${end})`}
+            className={`flex h-8 min-w-8 items-center justify-center rounded-full border-2 px-2.5 text-xs font-semibold transition ${
+              active
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-border bg-card text-foreground hover:border-primary"
+            }`}
+          >
+            {p + 1}
+          </button>
+        );
+      })}
     </div>
   );
 }

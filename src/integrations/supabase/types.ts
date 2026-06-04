@@ -22,6 +22,7 @@ export type Database = {
           label: string
           slug: string
           user_id: string
+          words_per_patch: number
         }
         Insert: {
           created_at?: string
@@ -30,6 +31,7 @@ export type Database = {
           label: string
           slug: string
           user_id: string
+          words_per_patch?: number
         }
         Update: {
           created_at?: string
@@ -38,13 +40,16 @@ export type Database = {
           label?: string
           slug?: string
           user_id?: string
+          words_per_patch?: number
         }
         Relationships: []
       }
       custom_words: {
         Row: {
+          audio_url: string | null
           category_id: string
           created_at: string
+          example: string
           id: string
           image_url: string | null
           ipa: string
@@ -53,8 +58,10 @@ export type Database = {
           word: string
         }
         Insert: {
+          audio_url?: string | null
           category_id: string
           created_at?: string
+          example?: string
           id?: string
           image_url?: string | null
           ipa?: string
@@ -63,8 +70,10 @@ export type Database = {
           word: string
         }
         Update: {
+          audio_url?: string | null
           category_id?: string
           created_at?: string
+          example?: string
           id?: string
           image_url?: string | null
           ipa?: string
