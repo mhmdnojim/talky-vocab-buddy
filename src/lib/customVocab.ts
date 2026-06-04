@@ -40,7 +40,7 @@ async function requireUserId(): Promise<string> {
 export async function listCategories(): Promise<CustomCategory[]> {
   const { data, error } = await supabase
     .from("custom_categories")
-    .select("id, slug, label, emoji")
+    .select("id, slug, label, emoji, words_per_patch")
     .order("created_at", { ascending: false });
   if (error) throw error;
   return data ?? [];
@@ -49,7 +49,7 @@ export async function listCategories(): Promise<CustomCategory[]> {
 export async function getCategoryBySlug(slug: string): Promise<CustomCategory | null> {
   const { data, error } = await supabase
     .from("custom_categories")
-    .select("id, slug, label, emoji")
+    .select("id, slug, label, emoji, words_per_patch")
     .eq("slug", slug)
     .maybeSingle();
   if (error) throw error;
@@ -59,7 +59,7 @@ export async function getCategoryBySlug(slug: string): Promise<CustomCategory | 
 export async function listWords(categoryId: string): Promise<CustomWord[]> {
   const { data, error } = await supabase
     .from("custom_words")
-    .select("id, category_id, word, ipa, image_url, position")
+    .select("id, category_id, word, ipa, image_url, audio_url, example, position")
     .eq("category_id", categoryId)
     .order("position", { ascending: true });
   if (error) throw error;
