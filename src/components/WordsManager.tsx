@@ -18,10 +18,9 @@ import {
 import { CATEGORIES, VOCABULARY, type Category } from "@/data/vocabulary";
 import {
   listCategories,
-  listWords,
   deleteCategory,
-  type CustomCategory,
 } from "@/lib/customVocab";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Props {
   currentCategorySlug: string;
