@@ -459,6 +459,24 @@ function UploadPage() {
     </div>
   );
 }
+function ExtractLogPanel({ log }: { log: string[] }) {
+  return (
+    <div className="mt-6 rounded-xl border-2 border-border bg-card p-4">
+      <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
+        <Sparkles className="h-4 w-4 text-primary" />
+        AI extraction log
+      </div>
+      <ul className="max-h-60 space-y-1 overflow-y-auto font-mono text-xs text-muted-foreground">
+        {log.map((line, i) => (
+          <li key={i} className={i === log.length - 1 ? "text-foreground" : ""}>
+            {line}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 
 function ProgressPanel({ progress }: { progress: WordProgress[] }) {
   const doneCount = progress.filter((p) => p.status === "done").length;
