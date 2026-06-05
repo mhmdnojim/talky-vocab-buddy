@@ -359,6 +359,7 @@ function UploadPage() {
 
   return (
     <div className="min-h-screen bg-background pb-16">
+      <PaymentTestModeBanner />
       <header className="flex items-center gap-3 bg-primary px-4 py-4 text-primary-foreground shadow-md">
         <Link
           to="/"
@@ -369,6 +370,14 @@ function UploadPage() {
         </Link>
         <h1 className="text-lg font-semibold">Add Category</h1>
       </header>
+      {atCategoryLimit && (
+        <div className="mx-auto mt-4 max-w-xl rounded-lg border-2 border-orange-300 bg-orange-50 px-3 py-2 text-sm text-orange-800">
+          <Lock className="mr-1 inline h-4 w-4" />
+          You've reached your {sub.tier} plan limit of {limits.categories} categories.{" "}
+          <Link to="/pricing" className="font-semibold underline">Upgrade</Link> to add more.
+        </div>
+      )}
+
 
       <main className="mx-auto max-w-xl px-4 pt-6">
         <div className="mb-6 grid grid-cols-2 gap-2 rounded-xl bg-muted p-1">
