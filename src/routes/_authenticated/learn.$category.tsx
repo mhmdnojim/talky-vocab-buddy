@@ -633,7 +633,7 @@ function Learn() {
         />
 
         <div className="mt-8 text-center">
-          <div className="text-2xl font-semibold text-foreground">
+          <div className={`${FONT_SIZE_LEVELS[Math.min(fontSize + 1, FONT_SIZE_LEVELS.length - 1)].class} font-semibold text-foreground`}>
             <RubyText
               text={flipped ? translations[current.word] ?? current.word : current.word}
               pinyin={flipped ? translationPinyin[current.word] : sourcePinyin[current.word]}
