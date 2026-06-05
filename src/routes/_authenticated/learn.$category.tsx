@@ -145,6 +145,11 @@ function Learn() {
     if (typeof window === "undefined") return "cartoon";
     return (localStorage.getItem("vocab-image-style") as ImageStyle) || "cartoon";
   });
+  const [fontSize, setFontSize] = useState<number>(() => {
+    if (typeof window === "undefined") return 3;
+    const saved = parseInt(localStorage.getItem("vocab-font-size") ?? "3", 10);
+    return Number.isFinite(saved) && saved >= 0 && saved < FONT_SIZE_LEVELS.length ? saved : 3;
+  });
   const [customCats, setCustomCats] = useState<CustomCategory[]>([]);
   const navigate = useNavigate();
   const translate = useServerFn(translateWords);
