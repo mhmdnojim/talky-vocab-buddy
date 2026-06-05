@@ -146,9 +146,9 @@ function Learn() {
     return (localStorage.getItem("vocab-image-style") as ImageStyle) || "cartoon";
   });
   const [fontSize, setFontSize] = useState<number>(() => {
-    if (typeof window === "undefined") return 3;
-    const saved = parseInt(localStorage.getItem("vocab-font-size") ?? "3", 10);
-    return Number.isFinite(saved) && saved >= 0 && saved < FONT_SIZE_LEVELS.length ? saved : 3;
+    if (typeof window === "undefined") return FONT_SIZE_LEVELS.length - 1;
+    const saved = parseInt(localStorage.getItem("vocab-font-size") ?? String(FONT_SIZE_LEVELS.length - 1), 10);
+    return Number.isFinite(saved) && saved >= 0 && saved < FONT_SIZE_LEVELS.length ? saved : FONT_SIZE_LEVELS.length - 1;
   });
   const [customCats, setCustomCats] = useState<CustomCategory[]>([]);
   const navigate = useNavigate();
@@ -481,40 +481,26 @@ function Learn() {
           >
             {flipped ? "EN" : targetLang.slice(0, 2).toUpperCase()}
           </button>
-          <div className="flex items-center rounded-full border-2 border-primary-foreground/80 bg-primary text-primary-foreground">
-            <button
-              onClick={() => {
-                setFontSize((v) => {
-                  const next = Math.max(0, v - 1);
-                  try { localStorage.setItem("vocab-font-size", String(next)); } catch { /* ignore */ }
-                  return next;
-                });
+          <div className="flex w-24 items-center gap-1 rounded-full border-2 border-primary-foreground/80 bg-primary px-2 text-primary-foreground">
+            <span className="text-[10px] font-bold">A</span>
+            <input
+              type="range"
+              min={0}
+              max={FONT_SIZE_LEVELS.length - 1}
+              step={1}
+              value={fontSize}
+              onChange={(e) => {
+                const next = Number(e.target.value);
+                setFontSize(next);
+                try { localStorage.setItem("vocab-font-size", String(next)); } catch { /* ignore */ }
               }}
-              disabled={fontSize <= 0}
-              className="flex h-9 w-7 items-center justify-center rounded-l-full text-xs font-bold disabled:opacity-40"
-              aria-label="Decrease font size"
-              title="Smaller"
-            >
-              A
-            </button>
-            <span className="pointer-events-none select-none text-[10px] font-medium opacity-60">
-              {fontSize + 1}
-            </span>
-            <button
-              onClick={() => {
-                setFontSize((v) => {
-                  const next = Math.min(FONT_SIZE_LEVELS.length - 1, v + 1);
-                  try { localStorage.setItem("vocab-font-size", String(next)); } catch { /* ignore */ }
-                  return next;
-                });
+              aria-label="Font size"
+              className="vocab-progress font-slider flex-1"
+              style={{
+                background: `linear-gradient(to right, var(--primary-foreground) 0%, var(--primary-foreground) ${(fontSize / (FONT_SIZE_LEVELS.length - 1)) * 100}%, color-mix(in oklab, var(--primary-foreground) 30%, transparent) ${(fontSize / (FONT_SIZE_LEVELS.length - 1)) * 100}%, color-mix(in oklab, var(--primary-foreground) 30%, transparent) 100%)`,
               }}
-              disabled={fontSize >= FONT_SIZE_LEVELS.length - 1}
-              className="flex h-9 w-7 items-center justify-center rounded-r-full text-sm font-bold disabled:opacity-40"
-              aria-label="Increase font size"
-              title="Bigger"
-            >
-              A
-            </button>
+            />
+            <span className="text-sm font-bold">A</span>
           </div>
         </div>
       </header>
