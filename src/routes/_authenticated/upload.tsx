@@ -88,6 +88,15 @@ function UploadPage() {
   const topicFn = useServerFn(generateWordsForTopic);
   const imageFn = useServerFn(generateVocabImage);
   const exampleFn = useServerFn(generateExampleSentence);
+  const sub = useSubscription();
+  const limits = getTierLimits(sub.tier);
+  const [categoryCount, setCategoryCount] = useState<number>(0);
+  const atCategoryLimit =
+    limits.categories !== null && categoryCount >= limits.categories;
+
+  useEffect(() => {
+    void listCategories().then((cats) => setCategoryCount(cats.length)).catch(() => {});
+  }, []);
 
   const [mode, setMode] = useState<Mode>("file");
   const [label, setLabel] = useState("");
@@ -110,6 +119,16 @@ function UploadPage() {
   >("cartoon");
   const [doAudio, setDoAudio] = useState(false);
   const [doExample, setDoExample] = useState(false);
+
+  // Clamp words-per-patch to tier limit
+  useEffect(() => {
+    if (maxPerBatch > limits.wordsPerPatch) setMaxPerBatch(limits.wordsPerPatch);
+  }, [limits.wordsPerPatch, maxPerBatch]);
+
+  // Disable AI audio for tiers without it
+  useEffect(() => {
+    if (!limits.aiAudio && doAudio) setDoAudio(false);
+  }, [limits.aiAudio, doAudio]);
 
   const cancelRef = useRef(false);
   const busy = phase === "extracting" || phase === "generating";
