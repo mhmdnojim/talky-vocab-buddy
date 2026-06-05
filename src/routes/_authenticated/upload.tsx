@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   Upload,
@@ -12,6 +12,7 @@ import {
   Image as ImageIcon,
   Volume2,
   BookOpen,
+  Lock,
 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { parseFileToText } from "@/lib/parseFile";
@@ -28,7 +29,10 @@ import {
   updateWordAudio,
   updateWordExample,
   listWords,
+  listCategories,
 } from "@/lib/customVocab";
+import { useSubscription, getTierLimits } from "@/hooks/useSubscription";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 
 export const Route = createFileRoute("/_authenticated/upload")({
   ssr: false,
@@ -84,6 +88,15 @@ function UploadPage() {
   const topicFn = useServerFn(generateWordsForTopic);
   const imageFn = useServerFn(generateVocabImage);
   const exampleFn = useServerFn(generateExampleSentence);
+  const sub = useSubscription();
+  const limits = getTierLimits(sub.tier);
+  const [categoryCount, setCategoryCount] = useState<number>(0);
+  const atCategoryLimit =
+    limits.categories !== null && categoryCount >= limits.categories;
+
+  useEffect(() => {
+    void listCategories().then((cats) => setCategoryCount(cats.length)).catch(() => {});
+  }, []);
 
   const [mode, setMode] = useState<Mode>("file");
   const [label, setLabel] = useState("");
@@ -107,6 +120,16 @@ function UploadPage() {
   const [doAudio, setDoAudio] = useState(false);
   const [doExample, setDoExample] = useState(false);
 
+  // Clamp words-per-patch to tier limit
+  useEffect(() => {
+    if (maxPerBatch > limits.wordsPerPatch) setMaxPerBatch(limits.wordsPerPatch);
+  }, [limits.wordsPerPatch, maxPerBatch]);
+
+  // Disable AI audio for tiers without it
+  useEffect(() => {
+    if (!limits.aiAudio && doAudio) setDoAudio(false);
+  }, [limits.aiAudio, doAudio]);
+
   const cancelRef = useRef(false);
   const busy = phase === "extracting" || phase === "generating";
 
@@ -122,6 +145,12 @@ function UploadPage() {
     if (!label.trim()) return;
     if (mode === "file" && !file) return;
     if (mode === "topic" && !topic.trim()) return;
+    if (atCategoryLimit) {
+      setError(
+        `You've reached your ${sub.tier} plan limit of ${limits.categories} categories. Upgrade to add more.`,
+      );
+      return;
+    }
     setError(null);
     setProgress([]);
     setLog([]);
@@ -330,6 +359,7 @@ function UploadPage() {
 
   return (
     <div className="min-h-screen bg-background pb-16">
+      <PaymentTestModeBanner />
       <header className="flex items-center gap-3 bg-primary px-4 py-4 text-primary-foreground shadow-md">
         <Link
           to="/"
@@ -340,6 +370,14 @@ function UploadPage() {
         </Link>
         <h1 className="text-lg font-semibold">Add Category</h1>
       </header>
+      {atCategoryLimit && (
+        <div className="mx-auto mt-4 max-w-xl rounded-lg border-2 border-orange-300 bg-orange-50 px-3 py-2 text-sm text-orange-800">
+          <Lock className="mr-1 inline h-4 w-4" />
+          You've reached your {sub.tier} plan limit of {limits.categories} categories.{" "}
+          <Link to="/pricing" className="font-semibold underline">Upgrade</Link> to add more.
+        </div>
+      )}
+
 
       <main className="mx-auto max-w-xl px-4 pt-6">
         <div className="mb-6 grid grid-cols-2 gap-2 rounded-xl bg-muted p-1">
