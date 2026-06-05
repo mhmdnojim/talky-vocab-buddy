@@ -627,7 +627,7 @@ function Learn() {
   );
 }
 
-function VoiceControls({ word }: { word: string }) {
+function VoiceControls({ word, lang }: { word: string; lang?: string }) {
   const [recording, setRecording] = useState(false);
   return (
     <div className="mt-6 flex items-center justify-center gap-5">
@@ -644,14 +644,14 @@ function VoiceControls({ word }: { word: string }) {
         <Mic className="h-6 w-6 text-primary" />
       </button>
       <button
-        onClick={() => void speak(word)}
+        onClick={() => void speak(word, lang ? { lang } : undefined)}
         className="flex h-14 w-14 items-center justify-center rounded-full bg-card shadow-md"
         aria-label="Play pronunciation"
       >
         <Volume2 className="h-6 w-6 text-primary" />
       </button>
       <button
-        onClick={() => void speak(word, { slow: true })}
+        onClick={() => void speak(word, { slow: true, lang })}
         className="flex h-14 w-14 items-center justify-center rounded-full bg-card shadow-md"
         aria-label="Play slowly"
       >
