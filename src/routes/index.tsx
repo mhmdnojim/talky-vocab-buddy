@@ -106,6 +106,7 @@ function Home() {
 
   return (
     <div className="min-h-screen bg-background pb-16">
+      <PaymentTestModeBanner />
       <header className="bg-primary px-5 py-6 text-primary-foreground shadow-md">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -114,26 +115,45 @@ function Home() {
               Tap a category to start learning with pictures and voice
             </p>
           </div>
-          {authed ? (
-            <button
-              onClick={async () => {
-                await supabase.auth.signOut();
-                void reload();
-              }}
-              aria-label="Sign out"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-foreground/10 transition hover:bg-primary-foreground/20"
-            >
-              <LogOut className="h-4 w-4" />
-            </button>
-          ) : (
-            <button
-              onClick={() => navigate({ to: "/auth" })}
-              aria-label="Sign in"
+          <div className="flex items-center gap-2">
+            <Link
+              to="/pricing"
+              aria-label="Pricing"
               className="flex h-9 items-center gap-1.5 shrink-0 rounded-full bg-primary-foreground/10 px-3 text-sm font-semibold transition hover:bg-primary-foreground/20"
             >
-              <LogIn className="h-4 w-4" /> Sign in
-            </button>
-          )}
+              <Sparkles className="h-4 w-4" />
+              {sub.tier === "free" ? "Upgrade" : <span className="capitalize">{sub.tier}</span>}
+            </Link>
+            {authed ? (
+              <>
+                <Link
+                  to="/account"
+                  aria-label="Account"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-foreground/10 transition hover:bg-primary-foreground/20"
+                >
+                  <User className="h-4 w-4" />
+                </Link>
+                <button
+                  onClick={async () => {
+                    await supabase.auth.signOut();
+                    void reload();
+                  }}
+                  aria-label="Sign out"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-foreground/10 transition hover:bg-primary-foreground/20"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => navigate({ to: "/auth" })}
+                aria-label="Sign in"
+                className="flex h-9 items-center gap-1.5 shrink-0 rounded-full bg-primary-foreground/10 px-3 text-sm font-semibold transition hover:bg-primary-foreground/20"
+              >
+                <LogIn className="h-4 w-4" /> Sign in
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
