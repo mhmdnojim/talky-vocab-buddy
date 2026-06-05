@@ -17,6 +17,7 @@ import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SitemapXmlRouteImport } from './routes/sitemap.xml'
 import { Route as ApiTtsRouteImport } from './routes/api/tts'
 import { Route as AuthenticatedUploadRouteImport } from './routes/_authenticated/upload'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
@@ -62,6 +63,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SitemapXmlRoute = SitemapXmlRouteImport.update({
+  id: '/sitemap/xml',
+  path: '/sitemap/xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiTtsRoute = ApiTtsRouteImport.update({
   id: '/api/tts',
   path: '/api/tts',
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/account': typeof AuthenticatedAccountRoute
   '/upload': typeof AuthenticatedUploadRoute
   '/api/tts': typeof ApiTtsRoute
+  '/sitemap/xml': typeof SitemapXmlRoute
   '/learn/$category': typeof AuthenticatedLearnCategoryRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -115,6 +122,7 @@ export interface FileRoutesByTo {
   '/account': typeof AuthenticatedAccountRoute
   '/upload': typeof AuthenticatedUploadRoute
   '/api/tts': typeof ApiTtsRoute
+  '/sitemap/xml': typeof SitemapXmlRoute
   '/learn/$category': typeof AuthenticatedLearnCategoryRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -131,6 +139,7 @@ export interface FileRoutesById {
   '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/_authenticated/upload': typeof AuthenticatedUploadRoute
   '/api/tts': typeof ApiTtsRoute
+  '/sitemap/xml': typeof SitemapXmlRoute
   '/_authenticated/learn/$category': typeof AuthenticatedLearnCategoryRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -147,6 +156,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/upload'
     | '/api/tts'
+    | '/sitemap/xml'
     | '/learn/$category'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -161,6 +171,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/upload'
     | '/api/tts'
+    | '/sitemap/xml'
     | '/learn/$category'
     | '/api/public/payments/webhook'
   id:
@@ -176,6 +187,7 @@ export interface FileRouteTypes {
     | '/_authenticated/account'
     | '/_authenticated/upload'
     | '/api/tts'
+    | '/sitemap/xml'
     | '/_authenticated/learn/$category'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
@@ -190,6 +202,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   ApiTtsRoute: typeof ApiTtsRoute
+  SitemapXmlRoute: typeof SitemapXmlRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
@@ -249,6 +262,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap/xml': {
+      id: '/sitemap/xml'
+      path: '/sitemap/xml'
+      fullPath: '/sitemap/xml'
+      preLoaderRoute: typeof SitemapXmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/tts': {
@@ -314,8 +334,19 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   ApiTtsRoute: ApiTtsRoute,
+  SitemapXmlRoute: SitemapXmlRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
