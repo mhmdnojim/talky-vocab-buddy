@@ -572,13 +572,14 @@ function Learn() {
               <img
                 src={current.image}
                 alt={`${current.word} illustration`}
-                className="aspect-square w-full object-cover"
+                className="max-h-[40vh] w-full object-contain"
               />
             ) : (
-              <div className="flex aspect-square w-full items-center justify-center bg-muted text-6xl">
+              <div className="flex h-[40vh] w-full items-center justify-center bg-muted text-6xl">
                 ✨
               </div>
             )}
+
             <button
               onClick={() => go(-1)}
               className="absolute left-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full text-foreground/40 transition hover:text-foreground"
