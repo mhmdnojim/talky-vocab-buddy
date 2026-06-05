@@ -89,7 +89,7 @@ export const adminUpdateSubscription = createServerFn({ method: "POST" })
     for (const [k, v] of Object.entries(patch)) {
       if (v !== undefined) update[k] = v;
     }
-    const { error } = await supabaseAdmin.from("subscriptions").update(update).eq("id", id);
+    const { error } = await supabaseAdmin.from("subscriptions").update(update as any).eq("id", id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
