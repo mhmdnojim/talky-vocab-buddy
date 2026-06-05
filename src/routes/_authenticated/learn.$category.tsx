@@ -393,17 +393,18 @@ function Learn() {
   const isFav = favorites.has(current.id);
 
   return (
-    <div className="flex min-h-screen flex-col bg-muted/40">
-      <header className="flex items-center justify-between bg-primary px-4 py-4 text-primary-foreground shadow-md">
+    <div className="flex h-screen flex-col overflow-hidden bg-muted/40">
+      <header className="flex shrink-0 flex-wrap items-center justify-between gap-y-2 bg-primary px-4 py-3 text-primary-foreground shadow-md">
         <Link
           to="/"
-          className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-primary-foreground/80"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-primary-foreground/80"
           aria-label="Back"
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
-        <h1 className="truncate text-lg font-semibold">{title}</h1>
-        <div className="flex items-center gap-2">
+        <h1 className="min-w-0 flex-1 truncate px-3 text-lg font-semibold">{title}</h1>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+
           <button
             onClick={() => setAutoplay((v) => !v)}
             className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-primary-foreground/80"
@@ -505,7 +506,7 @@ function Learn() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-xl flex-1 px-3 pb-8 pt-4">
+      <main className="mx-auto flex w-full max-w-xl min-h-0 flex-1 flex-col overflow-hidden px-3 pb-3 pt-3">
         {words.length > patchSize && (
           <PatchTabs
             total={words.length}
@@ -571,13 +572,14 @@ function Learn() {
               <img
                 src={current.image}
                 alt={`${current.word} illustration`}
-                className="aspect-square w-full object-cover"
+                className="max-h-[40vh] w-full object-contain"
               />
             ) : (
-              <div className="flex aspect-square w-full items-center justify-center bg-muted text-6xl">
+              <div className="flex h-[40vh] w-full items-center justify-center bg-muted text-6xl">
                 ✨
               </div>
             )}
+
             <button
               onClick={() => go(-1)}
               className="absolute left-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full text-foreground/40 transition hover:text-foreground"
