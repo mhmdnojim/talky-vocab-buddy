@@ -128,6 +128,10 @@ function Learn() {
   const [translationPinyin, setTranslationPinyin] = useState<Record<string, string[] | null>>({});
   const [translating, setTranslating] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
+  const [flipped, setFlipped] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("vocab-flipped") === "true";
+  });
   const [imageStyle, setImageStyle] = useState<ImageStyle>(() => {
     if (typeof window === "undefined") return "cartoon";
     return (localStorage.getItem("vocab-image-style") as ImageStyle) || "cartoon";
@@ -287,8 +291,9 @@ function Learn() {
 
   useEffect(() => {
     if (!current) return;
-    void speak(current.word);
-  }, [current?.id]);
+    const word = flipped ? translations[current.word] ?? current.word : current.word;
+    void speak(word, flipped ? { lang: langLabelToBcp47(targetLang) } : undefined);
+  }, [current?.id, flipped]);
 
   useEffect(() => {
     if (!autoplay) return;
@@ -312,12 +317,13 @@ function Learn() {
       else if (e.key === "ArrowRight") go(1);
       else if (e.key === " " && current) {
         e.preventDefault();
-        void speak(current.word);
+        const word = flipped ? translations[current.word] ?? current.word : current.word;
+        void speak(word, flipped ? { lang: langLabelToBcp47(targetLang) } : undefined);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [current?.id, words?.length]);
+  }, [current?.id, words?.length, flipped]);
 
   const touchStart = useRef<number | null>(null);
   const onTouchStart = (e: React.TouchEvent) => {
@@ -447,6 +453,20 @@ function Learn() {
               </option>
             ))}
           </select>
+          <button
+            onClick={() => {
+              setFlipped((v) => {
+                const next = !v;
+                try { localStorage.setItem("vocab-flipped", String(next)); } catch { /* ignore */ }
+                return next;
+              });
+            }}
+            className="flex h-9 items-center justify-center rounded-full border-2 border-primary-foreground/80 bg-primary px-3 text-xs font-medium text-primary-foreground focus:outline-none"
+            aria-label={flipped ? "Show original" : "Show translation as main"}
+            title={flipped ? "Show original" : "Show translation as main"}
+          >
+            {flipped ? "EN" : targetLang.slice(0, 2).toUpperCase()}
+          </button>
         </div>
       </header>
 
@@ -544,30 +564,33 @@ function Learn() {
               <span className="text-sm">👤</span>
             </div>
             <RubyText
-              text={current.word}
-              pinyin={sourcePinyin[current.word]}
+              text={flipped ? translations[current.word] ?? current.word : current.word}
+              pinyin={flipped ? translationPinyin[current.word] : sourcePinyin[current.word]}
               className="text-xl font-medium leading-tight"
             />
             {translations[current.word] && (
               <RubyText
-                text={translations[current.word]}
-                pinyin={translationPinyin[current.word]}
+                text={flipped ? current.word : translations[current.word]}
+                pinyin={flipped ? sourcePinyin[current.word] : translationPinyin[current.word]}
                 className="ml-auto text-xl font-medium leading-tight text-foreground"
               />
             )}
           </div>
         </div>
 
-        <VoiceControls word={current.word} />
+        <VoiceControls
+          word={flipped ? translations[current.word] ?? current.word : current.word}
+          lang={flipped ? langLabelToBcp47(targetLang) : undefined}
+        />
 
         <div className="mt-8 text-center">
           <div className="text-2xl font-semibold text-foreground">
             <RubyText
-              text={current.word}
-              pinyin={sourcePinyin[current.word]}
+              text={flipped ? translations[current.word] ?? current.word : current.word}
+              pinyin={flipped ? translationPinyin[current.word] : sourcePinyin[current.word]}
             />
           </div>
-          {current.ipa && (
+          {!flipped && current.ipa && (
             <div className="mt-2 text-base text-muted-foreground">[ {current.ipa} ]</div>
           )}
           <div
@@ -577,18 +600,18 @@ function Learn() {
             {translations[current.word] ? (
               <>
                 <RubyText
-                  text={translations[current.word]}
-                  pinyin={translationPinyin[current.word]}
+                  text={flipped ? current.word : translations[current.word]}
+                  pinyin={flipped ? sourcePinyin[current.word] : translationPinyin[current.word]}
                 />
                 <button
                   type="button"
                   onClick={() =>
-                    void speak(translations[current.word], {
-                      lang: langLabelToBcp47(targetLang),
+                    void speak(flipped ? current.word : translations[current.word], {
+                      lang: flipped ? undefined : langLabelToBcp47(targetLang),
                     })
                   }
                   className="flex h-7 w-7 items-center justify-center rounded-full bg-card text-primary shadow-sm transition hover:bg-muted"
-                  aria-label={`Play translation in ${targetLang}`}
+                  aria-label={`Play ${flipped ? "original" : targetLang}`}
                 >
                   <Volume2 className="h-3.5 w-3.5" />
                 </button>
@@ -606,7 +629,7 @@ function Learn() {
   );
 }
 
-function VoiceControls({ word }: { word: string }) {
+function VoiceControls({ word, lang }: { word: string; lang?: string }) {
   const [recording, setRecording] = useState(false);
   return (
     <div className="mt-6 flex items-center justify-center gap-5">
@@ -623,14 +646,14 @@ function VoiceControls({ word }: { word: string }) {
         <Mic className="h-6 w-6 text-primary" />
       </button>
       <button
-        onClick={() => void speak(word)}
+        onClick={() => void speak(word, lang ? { lang } : undefined)}
         className="flex h-14 w-14 items-center justify-center rounded-full bg-card shadow-md"
         aria-label="Play pronunciation"
       >
         <Volume2 className="h-6 w-6 text-primary" />
       </button>
       <button
-        onClick={() => void speak(word, { slow: true })}
+        onClick={() => void speak(word, { slow: true, lang })}
         className="flex h-14 w-14 items-center justify-center rounded-full bg-card shadow-md"
         aria-label="Play slowly"
       >
