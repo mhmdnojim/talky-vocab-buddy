@@ -8,6 +8,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { changeSubscriptionPlan } from "@/utils/customer-portal.functions";
 import { getPaddleEnvironment } from "@/lib/paddle";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+import { SiteFooter } from "@/components/SiteFooter";
 
 export const Route = createFileRoute("/pricing")({
   ssr: false,
@@ -226,6 +227,7 @@ function PricingPage() {
           </div>
         )}
       </main>
+      <SiteFooter />
     </div>
   );
 }
