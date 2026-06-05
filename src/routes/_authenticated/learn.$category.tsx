@@ -506,7 +506,7 @@ function Learn() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-xl flex-1 px-3 pb-8 pt-4">
+      <main className="mx-auto flex w-full max-w-xl min-h-0 flex-1 flex-col overflow-hidden px-3 pb-3 pt-3">
         {words.length > patchSize && (
           <PatchTabs
             total={words.length}
