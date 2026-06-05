@@ -128,6 +128,10 @@ function Learn() {
   const [translationPinyin, setTranslationPinyin] = useState<Record<string, string[] | null>>({});
   const [translating, setTranslating] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
+  const [flipped, setFlipped] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("vocab-flipped") === "true";
+  });
   const [imageStyle, setImageStyle] = useState<ImageStyle>(() => {
     if (typeof window === "undefined") return "cartoon";
     return (localStorage.getItem("vocab-image-style") as ImageStyle) || "cartoon";
