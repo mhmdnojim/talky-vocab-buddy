@@ -146,9 +146,9 @@ function Learn() {
     return (localStorage.getItem("vocab-image-style") as ImageStyle) || "cartoon";
   });
   const [fontSize, setFontSize] = useState<number>(() => {
-    if (typeof window === "undefined") return 3;
-    const saved = parseInt(localStorage.getItem("vocab-font-size") ?? "3", 10);
-    return Number.isFinite(saved) && saved >= 0 && saved < FONT_SIZE_LEVELS.length ? saved : 3;
+    if (typeof window === "undefined") return FONT_SIZE_LEVELS.length - 1;
+    const saved = parseInt(localStorage.getItem("vocab-font-size") ?? String(FONT_SIZE_LEVELS.length - 1), 10);
+    return Number.isFinite(saved) && saved >= 0 && saved < FONT_SIZE_LEVELS.length ? saved : FONT_SIZE_LEVELS.length - 1;
   });
   const [customCats, setCustomCats] = useState<CustomCategory[]>([]);
   const navigate = useNavigate();
