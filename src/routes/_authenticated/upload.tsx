@@ -145,6 +145,12 @@ function UploadPage() {
     if (!label.trim()) return;
     if (mode === "file" && !file) return;
     if (mode === "topic" && !topic.trim()) return;
+    if (atCategoryLimit) {
+      setError(
+        `You've reached your ${sub.tier} plan limit of ${limits.categories} categories. Upgrade to add more.`,
+      );
+      return;
+    }
     setError(null);
     setProgress([]);
     setLog([]);
