@@ -451,6 +451,20 @@ function Learn() {
               </option>
             ))}
           </select>
+          <button
+            onClick={() => {
+              setFlipped((v) => {
+                const next = !v;
+                try { localStorage.setItem("vocab-flipped", String(next)); } catch { /* ignore */ }
+                return next;
+              });
+            }}
+            className="flex h-9 items-center justify-center rounded-full border-2 border-primary-foreground/80 bg-primary px-3 text-xs font-medium text-primary-foreground focus:outline-none"
+            aria-label={flipped ? "Show original" : "Show translation as main"}
+            title={flipped ? "Show original" : "Show translation as main"}
+          >
+            {flipped ? "EN" : targetLang.slice(0, 2).toUpperCase()}
+          </button>
         </div>
       </header>
 
