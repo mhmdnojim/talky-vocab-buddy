@@ -481,8 +481,8 @@ function Learn() {
           >
             {flipped ? "EN" : targetLang.slice(0, 2).toUpperCase()}
           </button>
-          <div className="flex w-24 items-center gap-1 rounded-full border-2 border-primary-foreground/80 bg-primary px-2 text-primary-foreground">
-            <span className="text-[10px] font-bold">A</span>
+          <div className="flex h-9 w-28 shrink-0 items-center gap-2 rounded-full border-2 border-primary-foreground/80 bg-primary px-3 text-primary-foreground">
+            <span className="text-[10px] font-bold leading-none">A</span>
             <input
               type="range"
               min={0}
@@ -495,12 +495,12 @@ function Learn() {
                 try { localStorage.setItem("vocab-font-size", String(next)); } catch { /* ignore */ }
               }}
               aria-label="Font size"
-              className="vocab-progress font-slider flex-1"
+              className="font-slider h-1.5 flex-1 cursor-pointer appearance-none rounded-full"
               style={{
                 background: `linear-gradient(to right, var(--primary-foreground) 0%, var(--primary-foreground) ${(fontSize / (FONT_SIZE_LEVELS.length - 1)) * 100}%, color-mix(in oklab, var(--primary-foreground) 30%, transparent) ${(fontSize / (FONT_SIZE_LEVELS.length - 1)) * 100}%, color-mix(in oklab, var(--primary-foreground) 30%, transparent) 100%)`,
               }}
             />
-            <span className="text-sm font-bold">A</span>
+            <span className="text-base font-bold leading-none">A</span>
           </div>
         </div>
       </header>
