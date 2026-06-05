@@ -291,8 +291,9 @@ function Learn() {
 
   useEffect(() => {
     if (!current) return;
-    void speak(current.word);
-  }, [current?.id]);
+    const word = flipped ? translations[current.word] ?? current.word : current.word;
+    void speak(word, flipped ? { lang: langLabelToBcp47(targetLang) } : undefined);
+  }, [current?.id, flipped]);
 
   useEffect(() => {
     if (!autoplay) return;
@@ -316,12 +317,13 @@ function Learn() {
       else if (e.key === "ArrowRight") go(1);
       else if (e.key === " " && current) {
         e.preventDefault();
-        void speak(current.word);
+        const word = flipped ? translations[current.word] ?? current.word : current.word;
+        void speak(word, flipped ? { lang: langLabelToBcp47(targetLang) } : undefined);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [current?.id, words?.length]);
+  }, [current?.id, words?.length, flipped]);
 
   const touchStart = useRef<number | null>(null);
   const onTouchStart = (e: React.TouchEvent) => {
