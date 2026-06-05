@@ -106,6 +106,15 @@ export const Route = createFileRoute("/_authenticated/learn/$category")({
   ),
 });
 
+const FONT_SIZE_LEVELS = [
+  { label: "A", class: "text-sm" },
+  { label: "A", class: "text-base" },
+  { label: "A", class: "text-lg" },
+  { label: "A", class: "text-xl" },
+  { label: "A", class: "text-2xl" },
+  { label: "A", class: "text-3xl" },
+];
+
 function Learn() {
   const { category } = Route.useParams();
   const [words, setWords] = useState<DisplayWord[] | null>(null);
@@ -135,6 +144,11 @@ function Learn() {
   const [imageStyle, setImageStyle] = useState<ImageStyle>(() => {
     if (typeof window === "undefined") return "cartoon";
     return (localStorage.getItem("vocab-image-style") as ImageStyle) || "cartoon";
+  });
+  const [fontSize, setFontSize] = useState<number>(() => {
+    if (typeof window === "undefined") return 3;
+    const saved = parseInt(localStorage.getItem("vocab-font-size") ?? "3", 10);
+    return Number.isFinite(saved) && saved >= 0 && saved < FONT_SIZE_LEVELS.length ? saved : 3;
   });
   const [customCats, setCustomCats] = useState<CustomCategory[]>([]);
   const navigate = useNavigate();
@@ -467,6 +481,41 @@ function Learn() {
           >
             {flipped ? "EN" : targetLang.slice(0, 2).toUpperCase()}
           </button>
+          <div className="flex items-center rounded-full border-2 border-primary-foreground/80 bg-primary text-primary-foreground">
+            <button
+              onClick={() => {
+                setFontSize((v) => {
+                  const next = Math.max(0, v - 1);
+                  try { localStorage.setItem("vocab-font-size", String(next)); } catch { /* ignore */ }
+                  return next;
+                });
+              }}
+              disabled={fontSize <= 0}
+              className="flex h-9 w-7 items-center justify-center rounded-l-full text-xs font-bold disabled:opacity-40"
+              aria-label="Decrease font size"
+              title="Smaller"
+            >
+              A
+            </button>
+            <span className="pointer-events-none select-none text-[10px] font-medium opacity-60">
+              {fontSize + 1}
+            </span>
+            <button
+              onClick={() => {
+                setFontSize((v) => {
+                  const next = Math.min(FONT_SIZE_LEVELS.length - 1, v + 1);
+                  try { localStorage.setItem("vocab-font-size", String(next)); } catch { /* ignore */ }
+                  return next;
+                });
+              }}
+              disabled={fontSize >= FONT_SIZE_LEVELS.length - 1}
+              className="flex h-9 w-7 items-center justify-center rounded-r-full text-sm font-bold disabled:opacity-40"
+              aria-label="Increase font size"
+              title="Bigger"
+            >
+              A
+            </button>
+          </div>
         </div>
       </header>
 
@@ -566,13 +615,13 @@ function Learn() {
             <RubyText
               text={flipped ? translations[current.word] ?? current.word : current.word}
               pinyin={flipped ? translationPinyin[current.word] : sourcePinyin[current.word]}
-              className="text-xl font-medium leading-tight"
+              className={`${FONT_SIZE_LEVELS[fontSize].class} font-medium leading-tight`}
             />
             {translations[current.word] && (
               <RubyText
                 text={flipped ? current.word : translations[current.word]}
                 pinyin={flipped ? sourcePinyin[current.word] : translationPinyin[current.word]}
-                className="ml-auto text-xl font-medium leading-tight text-foreground"
+                className={`ml-auto ${FONT_SIZE_LEVELS[fontSize].class} font-medium leading-tight text-foreground`}
               />
             )}
           </div>
@@ -584,7 +633,7 @@ function Learn() {
         />
 
         <div className="mt-8 text-center">
-          <div className="text-2xl font-semibold text-foreground">
+          <div className={`${FONT_SIZE_LEVELS[Math.min(fontSize + 1, FONT_SIZE_LEVELS.length - 1)].class} font-semibold text-foreground`}>
             <RubyText
               text={flipped ? translations[current.word] ?? current.word : current.word}
               pinyin={flipped ? translationPinyin[current.word] : sourcePinyin[current.word]}
