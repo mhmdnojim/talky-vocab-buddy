@@ -576,16 +576,19 @@ function Learn() {
           </div>
         </div>
 
-        <VoiceControls word={current.word} />
+        <VoiceControls
+          word={flipped ? translations[current.word] ?? current.word : current.word}
+          lang={flipped ? langLabelToBcp47(targetLang) : undefined}
+        />
 
         <div className="mt-8 text-center">
           <div className="text-2xl font-semibold text-foreground">
             <RubyText
-              text={current.word}
-              pinyin={sourcePinyin[current.word]}
+              text={flipped ? translations[current.word] ?? current.word : current.word}
+              pinyin={flipped ? translationPinyin[current.word] : sourcePinyin[current.word]}
             />
           </div>
-          {current.ipa && (
+          {!flipped && current.ipa && (
             <div className="mt-2 text-base text-muted-foreground">[ {current.ipa} ]</div>
           )}
           <div
@@ -595,18 +598,18 @@ function Learn() {
             {translations[current.word] ? (
               <>
                 <RubyText
-                  text={translations[current.word]}
-                  pinyin={translationPinyin[current.word]}
+                  text={flipped ? current.word : translations[current.word]}
+                  pinyin={flipped ? sourcePinyin[current.word] : translationPinyin[current.word]}
                 />
                 <button
                   type="button"
                   onClick={() =>
-                    void speak(translations[current.word], {
-                      lang: langLabelToBcp47(targetLang),
+                    void speak(flipped ? current.word : translations[current.word], {
+                      lang: flipped ? undefined : langLabelToBcp47(targetLang),
                     })
                   }
                   className="flex h-7 w-7 items-center justify-center rounded-full bg-card text-primary shadow-sm transition hover:bg-muted"
-                  aria-label={`Play translation in ${targetLang}`}
+                  aria-label={`Play ${flipped ? "original" : targetLang}`}
                 >
                   <Volume2 className="h-3.5 w-3.5" />
                 </button>
