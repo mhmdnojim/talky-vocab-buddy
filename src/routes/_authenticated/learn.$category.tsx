@@ -495,7 +495,7 @@ function Learn() {
                 try { localStorage.setItem("vocab-font-size", String(next)); } catch { /* ignore */ }
               }}
               aria-label="Font size"
-              className="vocab-progress flex-1"
+              className="vocab-progress font-slider flex-1"
               style={{
                 background: `linear-gradient(to right, var(--primary-foreground) 0%, var(--primary-foreground) ${(fontSize / (FONT_SIZE_LEVELS.length - 1)) * 100}%, color-mix(in oklab, var(--primary-foreground) 30%, transparent) ${(fontSize / (FONT_SIZE_LEVELS.length - 1)) * 100}%, color-mix(in oklab, var(--primary-foreground) 30%, transparent) 100%)`,
               }}
