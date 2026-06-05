@@ -13,6 +13,7 @@ import {
 } from "@/lib/customVocab";
 import { supabase } from "@/integrations/supabase/client";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+import { SiteFooter } from "@/components/SiteFooter";
 import { useSubscription } from "@/hooks/useSubscription";
 
 export const Route = createFileRoute("/")({
@@ -266,6 +267,7 @@ function Home() {
           Upload Excel, PDF, Word or text — AI extracts words and draws each one.
         </p>
       </main>
+      <SiteFooter />
     </div>
   );
 }
