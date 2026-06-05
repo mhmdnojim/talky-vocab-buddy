@@ -540,24 +540,21 @@ function Learn() {
           </div>
 
           <div className="flex items-center gap-3 px-5 py-4">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-muted-foreground">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
               <span className="text-sm">👤</span>
             </div>
-            <div className="flex flex-col">
+            <RubyText
+              text={current.word}
+              pinyin={sourcePinyin[current.word]}
+              className="text-xl font-medium leading-tight"
+            />
+            {translations[current.word] && (
               <RubyText
-                text={current.word}
-                pinyin={sourcePinyin[current.word]}
-                className="text-xl font-medium leading-tight"
+                text={translations[current.word]}
+                pinyin={translationPinyin[current.word]}
+                className="ml-auto text-xl font-medium leading-tight text-foreground"
               />
-              {translations[current.word] && (
-                <span className="text-xs text-muted-foreground" dir="auto">
-                  <RubyText
-                    text={translations[current.word]}
-                    pinyin={translationPinyin[current.word]}
-                  />
-                </span>
-              )}
-            </div>
+            )}
           </div>
         </div>
 
