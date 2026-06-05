@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   Upload,
@@ -12,6 +12,7 @@ import {
   Image as ImageIcon,
   Volume2,
   BookOpen,
+  Lock,
 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { parseFileToText } from "@/lib/parseFile";
@@ -28,7 +29,10 @@ import {
   updateWordAudio,
   updateWordExample,
   listWords,
+  listCategories,
 } from "@/lib/customVocab";
+import { useSubscription, getTierLimits } from "@/hooks/useSubscription";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 
 export const Route = createFileRoute("/_authenticated/upload")({
   ssr: false,
