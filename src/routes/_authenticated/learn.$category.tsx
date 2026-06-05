@@ -562,14 +562,14 @@ function Learn() {
               <span className="text-sm">👤</span>
             </div>
             <RubyText
-              text={current.word}
-              pinyin={sourcePinyin[current.word]}
+              text={flipped ? translations[current.word] ?? current.word : current.word}
+              pinyin={flipped ? translationPinyin[current.word] : sourcePinyin[current.word]}
               className="text-xl font-medium leading-tight"
             />
             {translations[current.word] && (
               <RubyText
-                text={translations[current.word]}
-                pinyin={translationPinyin[current.word]}
+                text={flipped ? current.word : translations[current.word]}
+                pinyin={flipped ? sourcePinyin[current.word] : translationPinyin[current.word]}
                 className="ml-auto text-xl font-medium leading-tight text-foreground"
               />
             )}
