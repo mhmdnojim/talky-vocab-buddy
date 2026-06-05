@@ -32,7 +32,7 @@ const PLANS: Array<{
   tier: Tier;
   name: string;
   blurb: string;
-  monthly: { priceId: string | null; amount: string };
+  monthly: { priceId: string | null; amount: string; savings?: string };
   yearly: { priceId: string | null; amount: string; savings?: string };
   features: string[];
 }> = [
