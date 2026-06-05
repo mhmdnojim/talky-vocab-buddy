@@ -40,6 +40,7 @@ function Home() {
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [exportOpen, setExportOpen] = useState(false);
   const exportRef = useRef<HTMLDivElement>(null);
+  const sub = useSubscription();
 
   const reload = async () => {
     const { data: userData } = await supabase.auth.getUser();
