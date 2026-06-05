@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useRef } from "react";
-import { Plus, Trash2, LogOut, LogIn, Download, FileSpreadsheet, FileJson } from "lucide-react";
+import { Plus, Trash2, LogOut, LogIn, Download, FileSpreadsheet, FileJson, Sparkles, User } from "lucide-react";
 import { CATEGORIES, VOCABULARY } from "@/data/vocabulary";
 import {
   deleteCategory,
@@ -12,6 +12,8 @@ import {
   downloadFile,
 } from "@/lib/customVocab";
 import { supabase } from "@/integrations/supabase/client";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+import { useSubscription } from "@/hooks/useSubscription";
 
 export const Route = createFileRoute("/")({
   head: () => ({
