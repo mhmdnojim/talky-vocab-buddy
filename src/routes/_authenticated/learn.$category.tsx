@@ -481,6 +481,41 @@ function Learn() {
           >
             {flipped ? "EN" : targetLang.slice(0, 2).toUpperCase()}
           </button>
+          <div className="flex items-center rounded-full border-2 border-primary-foreground/80 bg-primary text-primary-foreground">
+            <button
+              onClick={() => {
+                setFontSize((v) => {
+                  const next = Math.max(0, v - 1);
+                  try { localStorage.setItem("vocab-font-size", String(next)); } catch { /* ignore */ }
+                  return next;
+                });
+              }}
+              disabled={fontSize <= 0}
+              className="flex h-9 w-7 items-center justify-center rounded-l-full text-xs font-bold disabled:opacity-40"
+              aria-label="Decrease font size"
+              title="Smaller"
+            >
+              A
+            </button>
+            <span className="pointer-events-none select-none text-[10px] font-medium opacity-60">
+              {fontSize + 1}
+            </span>
+            <button
+              onClick={() => {
+                setFontSize((v) => {
+                  const next = Math.min(FONT_SIZE_LEVELS.length - 1, v + 1);
+                  try { localStorage.setItem("vocab-font-size", String(next)); } catch { /* ignore */ }
+                  return next;
+                });
+              }}
+              disabled={fontSize >= FONT_SIZE_LEVELS.length - 1}
+              className="flex h-9 w-7 items-center justify-center rounded-r-full text-sm font-bold disabled:opacity-40"
+              aria-label="Increase font size"
+              title="Bigger"
+            >
+              A
+            </button>
+          </div>
         </div>
       </header>
 
