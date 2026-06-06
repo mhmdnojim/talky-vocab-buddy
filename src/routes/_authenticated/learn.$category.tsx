@@ -232,6 +232,44 @@ function Learn() {
     }
   };
 
+  const [batchGen, setBatchGen] = useState<{ done: number; total: number } | null>(null);
+  const batchCancelRef = useRef(false);
+  const handleGenerateAll = async () => {
+    if (!words || batchGen) return;
+    const targets = words
+      .map((w, i) => ({ w, i }))
+      .filter(({ w }) => !w.image);
+    if (targets.length === 0) {
+      const ok = window.confirm("All words already have images. Regenerate all anyway?");
+      if (!ok) return;
+      targets.push(...words.map((w, i) => ({ w, i })));
+    }
+    batchCancelRef.current = false;
+    setBatchGen({ done: 0, total: targets.length });
+    for (let k = 0; k < targets.length; k++) {
+      if (batchCancelRef.current) break;
+      const { w: cur, i } = targets[k];
+      try {
+        const res = await regenImage({ data: { word: cur.word, style: imageStyle } });
+        const newImage = res.dataUrl;
+        setWords((prev) =>
+          prev ? prev.map((w, j) => (j === i ? { ...w, image: newImage } : w)) : prev,
+        );
+        if (/^[0-9a-f-]{36}$/i.test(cur.id)) {
+          try {
+            await updateWordImage(cur.id, newImage);
+          } catch {
+            /* ignore */
+          }
+        }
+      } catch (e) {
+        console.error("batch image failed", cur.word, e);
+      }
+      setBatchGen({ done: k + 1, total: targets.length });
+    }
+    setBatchGen(null);
+  };
+
   // Load words (builtin or custom)
   useEffect(() => {
     let cancelled = false;
