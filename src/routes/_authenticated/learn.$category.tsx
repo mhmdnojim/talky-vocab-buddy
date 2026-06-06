@@ -597,11 +597,26 @@ function Learn() {
 
           <button
             onClick={handleRegenerate}
-            disabled={regenerating}
+            disabled={regenerating || !!batchGen}
             aria-label="Regenerate image"
             className="absolute left-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-card/90 text-primary shadow-md backdrop-blur transition hover:bg-card disabled:opacity-60"
           >
             <RefreshCw className={`h-4 w-4 ${regenerating ? "animate-spin" : ""}`} />
+          </button>
+
+          <button
+            onClick={batchGen ? () => { batchCancelRef.current = true; } : handleGenerateAll}
+            disabled={regenerating}
+            aria-label={batchGen ? "Cancel batch generation" : "Generate images for all words"}
+            title={batchGen ? `Generating ${batchGen.done}/${batchGen.total} — click to cancel` : "Generate images for all"}
+            className="absolute left-14 top-3 z-10 flex h-9 items-center gap-1 rounded-full bg-card/90 px-2.5 text-primary shadow-md backdrop-blur transition hover:bg-card disabled:opacity-60"
+          >
+            <Images className={`h-4 w-4 ${batchGen ? "animate-pulse" : ""}`} />
+            {batchGen ? (
+              <span className="text-xs font-medium tabular-nums">{batchGen.done}/{batchGen.total}</span>
+            ) : (
+              <span className="text-xs font-medium">All</span>
+            )}
           </button>
 
           <div className="relative">
