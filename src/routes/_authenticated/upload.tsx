@@ -730,7 +730,12 @@ function CombinedPanel({
             />
           </div>
         )}
-        <ul className="max-h-40 space-y-1 overflow-y-auto font-mono text-xs text-muted-foreground">
+        <ul
+          ref={(el) => {
+            if (el) el.scrollTop = el.scrollHeight;
+          }}
+          className="max-h-40 space-y-1 overflow-y-auto font-mono text-xs text-muted-foreground"
+        >
           {log.map((line, i) => (
             <li key={i} className={i === log.length - 1 ? "text-foreground" : ""}>
               {line}
