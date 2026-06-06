@@ -132,6 +132,42 @@ function UploadPage() {
 
   const cancelRef = useRef(false);
   const busy = phase === "extracting" || phase === "generating";
+  const progressChannelRef = useRef<BroadcastChannel | null>(null);
+  const lastSnapshotRef = useRef<unknown>(null);
+
+  // Broadcast progress to /upload-progress tab whenever state changes.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!progressChannelRef.current) {
+      progressChannelRef.current = new BroadcastChannel("vocab-upload-progress");
+      progressChannelRef.current.onmessage = (e) => {
+        // Re-send latest snapshot when a new tab requests it
+        if (e.data?.type === "request" && lastSnapshotRef.current) {
+          progressChannelRef.current?.postMessage(lastSnapshotRef.current);
+        }
+      };
+    }
+    const snap = {
+      phase,
+      progress,
+      doImages,
+      doAudio,
+      doExample,
+      categoryLabel: label,
+    };
+    lastSnapshotRef.current = snap;
+    try {
+      localStorage.setItem("vocab-upload-progress", JSON.stringify(snap));
+    } catch {}
+    progressChannelRef.current.postMessage(snap);
+  }, [phase, progress, doImages, doAudio, doExample, label]);
+
+  useEffect(() => {
+    return () => {
+      progressChannelRef.current?.close();
+      progressChannelRef.current = null;
+    };
+  }, []);
 
   const addLog = (line: string) => setLog((l) => [...l, line]);
 
@@ -139,6 +175,7 @@ function UploadPage() {
     cancelRef.current = true;
     setStatusMsg("Cancelling… (saving progress so far)");
   };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -284,6 +321,11 @@ function UploadPage() {
 
       // -------- Phase 2: generate per-word assets --------
       setPhase("generating");
+      // Open Phase 2 in a new tab so we save space here.
+      try {
+        window.open("/upload-progress", "_blank", "noopener");
+      } catch {}
+
 
       const updateWord = (idx: number, patch: Partial<WordProgress>) =>
         setProgress((prev) => prev.map((p, i) => (i === idx ? { ...p, ...patch } : p)));
@@ -697,62 +739,32 @@ function CombinedPanel({
         </ul>
       </section>
 
-      {/* Phase 2: generation */}
+      {/* Phase 2: generation — now opens in a separate tab to save space */}
       {progress.length > 0 && (doImages || doAudio || doExample) && (
-        <section className="border-t border-border pt-4">
-          <div className="mb-2 flex items-center justify-between text-sm font-semibold">
-            <span className="flex items-center gap-2">
-              <ImageIcon className="h-4 w-4 text-primary" />
-              Phase 2 — Generate assets
-              {phase === "generating" && <Loader2 className="h-3 w-3 animate-spin text-primary" />}
-              {phase === "done" && <Check className="h-3.5 w-3.5 text-primary" />}
-              {phase === "cancelled" && <X className="h-3.5 w-3.5 text-destructive" />}
-            </span>
-            <span className="text-xs font-normal text-muted-foreground">
+        <section className="border-t border-border pt-4 text-sm">
+          <div className="mb-1 flex items-center gap-2 font-semibold">
+            <ImageIcon className="h-4 w-4 text-primary" />
+            Phase 2 — Generate assets
+            {phase === "generating" && <Loader2 className="h-3 w-3 animate-spin text-primary" />}
+            {phase === "done" && <Check className="h-3.5 w-3.5 text-primary" />}
+            {phase === "cancelled" && <X className="h-3.5 w-3.5 text-destructive" />}
+            <span className="ml-auto text-xs font-normal text-muted-foreground">
               {genDone}/{progress.length} ({genPct}%)
             </span>
           </div>
-          <div className="mb-3 h-2 w-full overflow-hidden rounded-full bg-muted">
-            <div
-              className="h-full bg-primary transition-all duration-300"
-              style={{ width: `${genPct}%` }}
-            />
-          </div>
-          <ul className="max-h-72 space-y-1 overflow-y-auto text-sm">
-            {progress.map((p, i) => {
-              const prev = i > 0 ? progress[i - 1].patchIndex : -1;
-              const isNewPatch = p.patchIndex !== prev;
-              const patchWords = progress.filter((x) => x.patchIndex === p.patchIndex);
-              const patchAllDone = patchWords.every(wordDone);
-              return (
-                <li key={i}>
-                  {isNewPatch && (
-                    <div className="mt-2 mb-1 flex items-center gap-2 text-xs font-semibold text-primary">
-                      <span>Patch {p.patchIndex + 1}</span>
-                      {patchAllDone && (
-                        <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                          <Check className="h-3 w-3" />
-                        </span>
-                      )}
-                      <span className="text-[10px] font-normal text-muted-foreground">
-                        ({patchWords.filter(wordDone).length}/{patchWords.length})
-                      </span>
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="truncate">{p.word}</span>
-                    <span className="flex items-center gap-1.5 text-xs">
-                      <AssetBadge icon={<ImageIcon className="h-3 w-3" />} status={p.image} />
-                      <AssetBadge icon={<Volume2 className="h-3 w-3" />} status={p.audio} />
-                      <AssetBadge icon={<BookOpen className="h-3 w-3" />} status={p.example} />
-                    </span>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+          <p className="text-xs text-muted-foreground">
+            Live progress opened in a new tab.{" "}
+            <button
+              type="button"
+              onClick={() => window.open("/upload-progress", "_blank", "noopener")}
+              className="font-medium text-primary underline"
+            >
+              Open again
+            </button>
+          </p>
         </section>
       )}
+
     </div>
   );
 }

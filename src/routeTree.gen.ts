@@ -19,6 +19,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SitemapXmlRouteImport } from './routes/sitemap.xml'
 import { Route as ApiTtsRouteImport } from './routes/api/tts'
+import { Route as AuthenticatedUploadProgressRouteImport } from './routes/_authenticated/upload-progress'
 import { Route as AuthenticatedUploadRouteImport } from './routes/_authenticated/upload'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
@@ -74,6 +75,12 @@ const ApiTtsRoute = ApiTtsRouteImport.update({
   path: '/api/tts',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedUploadProgressRoute =
+  AuthenticatedUploadProgressRouteImport.update({
+    id: '/upload-progress',
+    path: '/upload-progress',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedUploadRoute = AuthenticatedUploadRouteImport.update({
   id: '/upload',
   path: '/upload',
@@ -113,6 +120,7 @@ export interface FileRoutesByFullPath {
   '/account': typeof AuthenticatedAccountRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/upload': typeof AuthenticatedUploadRoute
+  '/upload-progress': typeof AuthenticatedUploadProgressRoute
   '/api/tts': typeof ApiTtsRoute
   '/sitemap/xml': typeof SitemapXmlRoute
   '/learn/$category': typeof AuthenticatedLearnCategoryRoute
@@ -129,6 +137,7 @@ export interface FileRoutesByTo {
   '/account': typeof AuthenticatedAccountRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/upload': typeof AuthenticatedUploadRoute
+  '/upload-progress': typeof AuthenticatedUploadProgressRoute
   '/api/tts': typeof ApiTtsRoute
   '/sitemap/xml': typeof SitemapXmlRoute
   '/learn/$category': typeof AuthenticatedLearnCategoryRoute
@@ -147,6 +156,7 @@ export interface FileRoutesById {
   '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/upload': typeof AuthenticatedUploadRoute
+  '/_authenticated/upload-progress': typeof AuthenticatedUploadProgressRoute
   '/api/tts': typeof ApiTtsRoute
   '/sitemap/xml': typeof SitemapXmlRoute
   '/_authenticated/learn/$category': typeof AuthenticatedLearnCategoryRoute
@@ -165,6 +175,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/admin'
     | '/upload'
+    | '/upload-progress'
     | '/api/tts'
     | '/sitemap/xml'
     | '/learn/$category'
@@ -181,6 +192,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/admin'
     | '/upload'
+    | '/upload-progress'
     | '/api/tts'
     | '/sitemap/xml'
     | '/learn/$category'
@@ -198,6 +210,7 @@ export interface FileRouteTypes {
     | '/_authenticated/account'
     | '/_authenticated/admin'
     | '/_authenticated/upload'
+    | '/_authenticated/upload-progress'
     | '/api/tts'
     | '/sitemap/xml'
     | '/_authenticated/learn/$category'
@@ -290,6 +303,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTtsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/upload-progress': {
+      id: '/_authenticated/upload-progress'
+      path: '/upload-progress'
+      fullPath: '/upload-progress'
+      preLoaderRoute: typeof AuthenticatedUploadProgressRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/upload': {
       id: '/_authenticated/upload'
       path: '/upload'
@@ -332,6 +352,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedUploadRoute: typeof AuthenticatedUploadRoute
+  AuthenticatedUploadProgressRoute: typeof AuthenticatedUploadProgressRoute
   AuthenticatedLearnCategoryRoute: typeof AuthenticatedLearnCategoryRoute
 }
 
@@ -339,6 +360,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAccountRoute: AuthenticatedAccountRoute,
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedUploadRoute: AuthenticatedUploadRoute,
+  AuthenticatedUploadProgressRoute: AuthenticatedUploadProgressRoute,
   AuthenticatedLearnCategoryRoute: AuthenticatedLearnCategoryRoute,
 }
 

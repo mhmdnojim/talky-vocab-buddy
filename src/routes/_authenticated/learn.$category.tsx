@@ -107,13 +107,11 @@ export const Route = createFileRoute("/_authenticated/learn/$category")({
 });
 
 const FONT_SIZE_LEVELS = [
-  { label: "A", class: "text-sm" },
-  { label: "A", class: "text-base" },
-  { label: "A", class: "text-lg" },
   { label: "A", class: "text-xl" },
   { label: "A", class: "text-2xl" },
   { label: "A", class: "text-3xl" },
 ];
+
 
 function Learn() {
   const { category } = Route.useParams();
