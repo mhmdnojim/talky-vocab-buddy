@@ -13,6 +13,7 @@ import {
   Mic,
   Loader2,
   RefreshCw,
+  Images,
 } from "lucide-react";
 import {
   CATEGORIES,
@@ -107,9 +108,9 @@ export const Route = createFileRoute("/_authenticated/learn/$category")({
 });
 
 const FONT_SIZE_LEVELS = [
-  { label: "A", class: "text-xl" },
-  { label: "A", class: "text-2xl" },
   { label: "A", class: "text-3xl" },
+  { label: "A", class: "text-4xl" },
+  { label: "A", class: "text-5xl" },
 ];
 
 
