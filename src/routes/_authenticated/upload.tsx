@@ -132,6 +132,42 @@ function UploadPage() {
 
   const cancelRef = useRef(false);
   const busy = phase === "extracting" || phase === "generating";
+  const progressChannelRef = useRef<BroadcastChannel | null>(null);
+  const lastSnapshotRef = useRef<unknown>(null);
+
+  // Broadcast progress to /upload-progress tab whenever state changes.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!progressChannelRef.current) {
+      progressChannelRef.current = new BroadcastChannel("vocab-upload-progress");
+      progressChannelRef.current.onmessage = (e) => {
+        // Re-send latest snapshot when a new tab requests it
+        if (e.data?.type === "request" && lastSnapshotRef.current) {
+          progressChannelRef.current?.postMessage(lastSnapshotRef.current);
+        }
+      };
+    }
+    const snap = {
+      phase,
+      progress,
+      doImages,
+      doAudio,
+      doExample,
+      categoryLabel: label,
+    };
+    lastSnapshotRef.current = snap;
+    try {
+      localStorage.setItem("vocab-upload-progress", JSON.stringify(snap));
+    } catch {}
+    progressChannelRef.current.postMessage(snap);
+  }, [phase, progress, doImages, doAudio, doExample, label]);
+
+  useEffect(() => {
+    return () => {
+      progressChannelRef.current?.close();
+      progressChannelRef.current = null;
+    };
+  }, []);
 
   const addLog = (line: string) => setLog((l) => [...l, line]);
 
@@ -139,6 +175,7 @@ function UploadPage() {
     cancelRef.current = true;
     setStatusMsg("Cancelling… (saving progress so far)");
   };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
