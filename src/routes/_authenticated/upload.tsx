@@ -321,6 +321,11 @@ function UploadPage() {
 
       // -------- Phase 2: generate per-word assets --------
       setPhase("generating");
+      // Open Phase 2 in a new tab so we save space here.
+      try {
+        window.open("/upload-progress", "_blank", "noopener");
+      } catch {}
+
 
       const updateWord = (idx: number, patch: Partial<WordProgress>) =>
         setProgress((prev) => prev.map((p, i) => (i === idx ? { ...p, ...patch } : p)));
