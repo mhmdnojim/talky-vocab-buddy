@@ -13,6 +13,7 @@ import {
   Mic,
   Loader2,
   RefreshCw,
+  Images,
 } from "lucide-react";
 import {
   CATEGORIES,
@@ -107,9 +108,9 @@ export const Route = createFileRoute("/_authenticated/learn/$category")({
 });
 
 const FONT_SIZE_LEVELS = [
-  { label: "A", class: "text-xl" },
-  { label: "A", class: "text-2xl" },
   { label: "A", class: "text-3xl" },
+  { label: "A", class: "text-4xl" },
+  { label: "A", class: "text-5xl" },
 ];
 
 
@@ -229,6 +230,44 @@ function Learn() {
     } finally {
       setRegenerating(false);
     }
+  };
+
+  const [batchGen, setBatchGen] = useState<{ done: number; total: number } | null>(null);
+  const batchCancelRef = useRef(false);
+  const handleGenerateAll = async () => {
+    if (!words || batchGen) return;
+    const targets = words
+      .map((w, i) => ({ w, i }))
+      .filter(({ w }) => !w.image);
+    if (targets.length === 0) {
+      const ok = window.confirm("All words already have images. Regenerate all anyway?");
+      if (!ok) return;
+      targets.push(...words.map((w, i) => ({ w, i })));
+    }
+    batchCancelRef.current = false;
+    setBatchGen({ done: 0, total: targets.length });
+    for (let k = 0; k < targets.length; k++) {
+      if (batchCancelRef.current) break;
+      const { w: cur, i } = targets[k];
+      try {
+        const res = await regenImage({ data: { word: cur.word, style: imageStyle } });
+        const newImage = res.dataUrl;
+        setWords((prev) =>
+          prev ? prev.map((w, j) => (j === i ? { ...w, image: newImage } : w)) : prev,
+        );
+        if (/^[0-9a-f-]{36}$/i.test(cur.id)) {
+          try {
+            await updateWordImage(cur.id, newImage);
+          } catch {
+            /* ignore */
+          }
+        }
+      } catch (e) {
+        console.error("batch image failed", cur.word, e);
+      }
+      setBatchGen({ done: k + 1, total: targets.length });
+    }
+    setBatchGen(null);
   };
 
   // Load words (builtin or custom)
@@ -558,11 +597,26 @@ function Learn() {
 
           <button
             onClick={handleRegenerate}
-            disabled={regenerating}
+            disabled={regenerating || !!batchGen}
             aria-label="Regenerate image"
             className="absolute left-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-card/90 text-primary shadow-md backdrop-blur transition hover:bg-card disabled:opacity-60"
           >
             <RefreshCw className={`h-4 w-4 ${regenerating ? "animate-spin" : ""}`} />
+          </button>
+
+          <button
+            onClick={batchGen ? () => { batchCancelRef.current = true; } : handleGenerateAll}
+            disabled={regenerating}
+            aria-label={batchGen ? "Cancel batch generation" : "Generate images for all words"}
+            title={batchGen ? `Generating ${batchGen.done}/${batchGen.total} — click to cancel` : "Generate images for all"}
+            className="absolute left-14 top-3 z-10 flex h-9 items-center gap-1 rounded-full bg-card/90 px-2.5 text-primary shadow-md backdrop-blur transition hover:bg-card disabled:opacity-60"
+          >
+            <Images className={`h-4 w-4 ${batchGen ? "animate-pulse" : ""}`} />
+            {batchGen ? (
+              <span className="text-xs font-medium tabular-nums">{batchGen.done}/{batchGen.total}</span>
+            ) : (
+              <span className="text-xs font-medium">All</span>
+            )}
           </button>
 
           <div className="relative">
