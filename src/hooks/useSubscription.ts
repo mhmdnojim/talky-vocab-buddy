@@ -72,12 +72,22 @@ export function useSubscription(): SubscriptionInfo {
         .maybeSingle();
 
       if (cancelled) return;
+
+      // Admins get unlimited access regardless of subscription
+      const { data: roleRow } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+      const isAdmin = !!roleRow;
+
       if (!data) {
         setState({
           loading: false,
-          tier: "free",
-          status: null,
-          isActive: false,
+          tier: isAdmin ? "pro" : "free",
+          status: isAdmin ? "admin" : null,
+          isActive: isAdmin,
           currentPeriodEnd: null,
           cancelAtPeriodEnd: false,
           subscriptionId: null,
@@ -87,9 +97,9 @@ export function useSubscription(): SubscriptionInfo {
         const active = isAccessActive(data.status as string, data.current_period_end as string | null);
         setState({
           loading: false,
-          tier: active ? deriveTier(data.product_id as string) : "free",
+          tier: isAdmin ? "pro" : active ? deriveTier(data.product_id as string) : "free",
           status: data.status as string,
-          isActive: active,
+          isActive: active || isAdmin,
           currentPeriodEnd: (data.current_period_end as string | null) ?? null,
           cancelAtPeriodEnd: !!data.cancel_at_period_end,
           subscriptionId: data.paddle_subscription_id as string,
