@@ -496,16 +496,22 @@ function UploadPage() {
                 <Check className="h-4 w-4 text-primary" />
                 Word + IPA (always)
               </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={doImages}
-                  onChange={(e) => setDoImages(e.target.checked)}
-                  disabled={busy}
-                />
+              <button
+                type="button"
+                onClick={() => setDoImages((v) => !v)}
+                disabled={busy}
+                className="flex w-full items-center gap-2 rounded-md py-1 text-left disabled:opacity-60"
+              >
+                <span
+                  className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
+                    doImages ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background"
+                  }`}
+                >
+                  {doImages && <Check className="h-3 w-3" />}
+                </span>
                 <ImageIcon className="h-4 w-4 text-primary" />
                 Image
-              </label>
+              </button>
               {doImages && (
                 <div className="ml-6">
                   <label className="mb-1 block text-xs text-muted-foreground">
@@ -528,26 +534,38 @@ function UploadPage() {
                   </select>
                 </div>
               )}
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={doAudio}
-                  onChange={(e) => setDoAudio(e.target.checked)}
-                  disabled={busy}
-                />
+              <button
+                type="button"
+                onClick={() => setDoAudio((v) => !v)}
+                disabled={busy}
+                className="flex w-full items-center gap-2 rounded-md py-1 text-left disabled:opacity-60"
+              >
+                <span
+                  className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
+                    doAudio ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background"
+                  }`}
+                >
+                  {doAudio && <Check className="h-3 w-3" />}
+                </span>
                 <Volume2 className="h-4 w-4 text-primary" />
                 Voice pronunciation
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={doExample}
-                  onChange={(e) => setDoExample(e.target.checked)}
-                  disabled={busy}
-                />
+              </button>
+              <button
+                type="button"
+                onClick={() => setDoExample((v) => !v)}
+                disabled={busy}
+                className="flex w-full items-center gap-2 rounded-md py-1 text-left disabled:opacity-60"
+              >
+                <span
+                  className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
+                    doExample ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background"
+                  }`}
+                >
+                  {doExample && <Check className="h-3 w-3" />}
+                </span>
                 <BookOpen className="h-4 w-4 text-primary" />
                 Example sentence
-              </label>
+              </button>
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
               Unchecked items can be generated later from the learn page.
