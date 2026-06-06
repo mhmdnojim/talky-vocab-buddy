@@ -699,73 +699,149 @@ function CombinedPanel({
   const genDone = progress.filter(wordDone).length;
   const genPct = progress.length > 0 ? Math.round((genDone / progress.length) * 100) : 0;
 
+  const hasPhase2 = progress.length > 0 && (doImages || doAudio || doExample);
+  const [tab, setTab] = useState<"phase1" | "phase2">("phase1");
+
+  // Auto-switch to active phase
+  useEffect(() => {
+    if (phase === "generating" && hasPhase2) setTab("phase2");
+    else if (phase === "extracting") setTab("phase1");
+  }, [phase, hasPhase2]);
+
   return (
-    <div className="mt-6 space-y-4 rounded-xl border-2 border-border bg-card p-4">
-      {/* Phase 1: extraction */}
-      <section>
-        <div className="mb-2 flex items-center justify-between text-sm font-semibold">
-          <span className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
-            Phase 1 — Extract words
-            {phase === "extracting" && <Loader2 className="h-3 w-3 animate-spin text-primary" />}
-            {phase !== "extracting" && extractProgress.total > 0 && (
-              <Check className="h-3.5 w-3.5 text-primary" />
-            )}
-          </span>
+    <div className="mt-6 rounded-xl border-2 border-border bg-card">
+      {/* Tabs header */}
+      <div className="flex border-b border-border">
+        <button
+          type="button"
+          onClick={() => setTab("phase1")}
+          className={`flex flex-1 items-center justify-center gap-2 px-3 py-2.5 text-sm font-semibold transition ${
+            tab === "phase1"
+              ? "border-b-2 border-primary text-foreground"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Sparkles className="h-4 w-4 text-primary" />
+          Phase 1
+          {phase === "extracting" && <Loader2 className="h-3 w-3 animate-spin text-primary" />}
+          {phase !== "extracting" && extractProgress.total > 0 && (
+            <Check className="h-3.5 w-3.5 text-primary" />
+          )}
           {extractProgress.total > 0 && (
             <span className="text-xs font-normal text-muted-foreground">
-              {extractProgress.done}/{extractProgress.total} ({extractPct}%)
+              {extractPct}%
             </span>
           )}
-        </div>
-        {extractProgress.total > 0 && (
-          <div className="mb-2 h-2 w-full overflow-hidden rounded-full bg-muted">
-            <div
-              className="h-full bg-primary transition-all duration-300"
-              style={{ width: `${extractPct}%` }}
-            />
-          </div>
-        )}
-        <ul
-          ref={(el) => {
-            if (el) el.scrollTop = el.scrollHeight;
-          }}
-          className="max-h-40 space-y-1 overflow-y-auto font-mono text-xs text-muted-foreground"
-        >
-          {log.map((line, i) => (
-            <li key={i} className={i === log.length - 1 ? "text-foreground" : ""}>
-              {line}
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      {/* Phase 2: generation — now opens in a separate tab to save space */}
-      {progress.length > 0 && (doImages || doAudio || doExample) && (
-        <section className="border-t border-border pt-4 text-sm">
-          <div className="mb-1 flex items-center gap-2 font-semibold">
+        </button>
+        {hasPhase2 && (
+          <button
+            type="button"
+            onClick={() => setTab("phase2")}
+            className={`flex flex-1 items-center justify-center gap-2 px-3 py-2.5 text-sm font-semibold transition ${
+              tab === "phase2"
+                ? "border-b-2 border-primary text-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
             <ImageIcon className="h-4 w-4 text-primary" />
-            Phase 2 — Generate assets
+            Phase 2
             {phase === "generating" && <Loader2 className="h-3 w-3 animate-spin text-primary" />}
             {phase === "done" && <Check className="h-3.5 w-3.5 text-primary" />}
             {phase === "cancelled" && <X className="h-3.5 w-3.5 text-destructive" />}
-            <span className="ml-auto text-xs font-normal text-muted-foreground">
-              {genDone}/{progress.length} ({genPct}%)
-            </span>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Live progress opened in a new tab.{" "}
-            <button
-              type="button"
-              onClick={() => window.open("/upload-progress", "_blank", "noopener")}
-              className="font-medium text-primary underline"
-            >
-              Open again
-            </button>
-          </p>
-        </section>
-      )}
+            <span className="text-xs font-normal text-muted-foreground">{genPct}%</span>
+          </button>
+        )}
+      </div>
 
+      <div className="p-4">
+        {tab === "phase1" && (
+          <section>
+            <div className="mb-2 flex items-center justify-between text-sm font-semibold">
+              <span>Extract words</span>
+              {extractProgress.total > 0 && (
+                <span className="text-xs font-normal text-muted-foreground">
+                  {extractProgress.done}/{extractProgress.total} ({extractPct}%)
+                </span>
+              )}
+            </div>
+            {extractProgress.total > 0 && (
+              <div className="mb-2 h-2 w-full overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full bg-primary transition-all duration-300"
+                  style={{ width: `${extractPct}%` }}
+                />
+              </div>
+            )}
+            <ul
+              ref={(el) => {
+                if (el) el.scrollTop = el.scrollHeight;
+              }}
+              className="max-h-60 space-y-1 overflow-y-auto font-mono text-xs text-muted-foreground"
+            >
+              {log.map((line, i) => (
+                <li key={i} className={i === log.length - 1 ? "text-foreground" : ""}>
+                  {line}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {tab === "phase2" && hasPhase2 && (
+          <section>
+            <div className="mb-2 flex items-center justify-between text-sm font-semibold">
+              <span>Generate assets</span>
+              <span className="text-xs font-normal text-muted-foreground">
+                {genDone}/{progress.length} ({genPct}%)
+              </span>
+            </div>
+            <div className="mb-3 h-2 w-full overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full bg-primary transition-all duration-300"
+                style={{ width: `${genPct}%` }}
+              />
+            </div>
+            <ul
+              ref={(el) => {
+                if (el) el.scrollTop = el.scrollHeight;
+              }}
+              className="max-h-72 space-y-1 overflow-y-auto text-sm"
+            >
+              {progress.map((p, i) => {
+                const prev = i > 0 ? progress[i - 1].patchIndex : -1;
+                const isNewPatch = p.patchIndex !== prev;
+                const patchWords = progress.filter((x) => x.patchIndex === p.patchIndex);
+                const patchAllDone = patchWords.every(wordDone);
+                return (
+                  <li key={p.id}>
+                    {isNewPatch && (
+                      <div className="mt-2 mb-1 flex items-center gap-2 text-xs font-semibold text-primary">
+                        <span>Patch {p.patchIndex + 1}</span>
+                        {patchAllDone && (
+                          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                            <Check className="h-3 w-3" />
+                          </span>
+                        )}
+                        <span className="text-[10px] font-normal text-muted-foreground">
+                          ({patchWords.filter(wordDone).length}/{patchWords.length})
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="truncate">{p.word}</span>
+                      <span className="flex items-center gap-1.5 text-xs">
+                        {doImages && <AssetBadge icon={<ImageIcon className="h-3 w-3" />} status={p.image} />}
+                        {doAudio && <AssetBadge icon={<Volume2 className="h-3 w-3" />} status={p.audio} />}
+                        {doExample && <AssetBadge icon={<BookOpen className="h-3 w-3" />} status={p.example} />}
+                      </span>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )}
+      </div>
     </div>
   );
 }
