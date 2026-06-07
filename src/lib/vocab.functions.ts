@@ -8,7 +8,7 @@ const ExtractInput = z.object({
 });
 
 const TranslateInput = z.object({
-  words: z.array(z.string().min(1).max(120)).min(1).max(60),
+  words: z.array(z.string().min(1).max(120)).min(1).max(200),
   targetLang: z.string().min(2).max(40),
 });
 
