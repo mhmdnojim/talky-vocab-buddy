@@ -4,7 +4,31 @@ export async function parseFileToText(file: File): Promise<string> {
   const name = file.name.toLowerCase();
   const ext = name.split(".").pop() ?? "";
 
-  if (["txt", "csv", "md"].includes(ext)) {
+  // Structured tabular: word | pinyin | translation | example
+  const formatTabular = (rows: unknown[][]): string => {
+    const out: string[] = ["word | pinyin | translation | example"];
+    for (const row of rows) {
+      if (!Array.isArray(row) || row.every((c) => c == null || String(c).trim() === "")) continue;
+      const cells = [0, 1, 2, 3].map((i) => (row[i] == null ? "" : String(row[i]).trim()));
+      // Skip header row if it looks like headers
+      if (
+        out.length === 1 &&
+        /^word$/i.test(cells[0]) &&
+        /pinyin/i.test(cells[1])
+      ) continue;
+      if (!cells[0]) continue;
+      out.push(cells.join(" | "));
+    }
+    return out.join("\n");
+  };
+
+  if (ext === "csv") {
+    const text = await file.text();
+    const rows = text.split(/\r?\n/).map((line) => line.split(/[,\t;]/));
+    return formatTabular(rows);
+  }
+
+  if (["txt", "md"].includes(ext)) {
     return await file.text();
   }
 
@@ -12,17 +36,13 @@ export async function parseFileToText(file: File): Promise<string> {
     const XLSX = await import("xlsx");
     const buf = await file.arrayBuffer();
     const wb = XLSX.read(buf, { type: "array" });
-    const lines: string[] = [];
+    const allRows: unknown[][] = [];
     for (const name of wb.SheetNames) {
       const sheet = wb.Sheets[name];
       const rows = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1 });
-      for (const row of rows) {
-        if (Array.isArray(row)) {
-          lines.push(row.map((c) => (c == null ? "" : String(c))).join(" | "));
-        }
-      }
+      for (const row of rows) if (Array.isArray(row)) allRows.push(row);
     }
-    return lines.join("\n");
+    return formatTabular(allRows);
   }
 
   if (ext === "docx" || ext === "doc") {
