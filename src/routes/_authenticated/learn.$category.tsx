@@ -689,21 +689,32 @@ function Learn() {
             </button>
           </div>
 
-          <div className="pb-5 pt-1 text-center">
-            <div className={`${FONT_SIZE_LEVELS[Math.min(fontSize + 1, FONT_SIZE_LEVELS.length - 1)].class} font-semibold text-foreground`}>
-              <RubyText
-                text={flipped ? translations[current.word] ?? current.word : current.word}
-                pinyin={flipped ? translationPinyin[current.word] : sourcePinyin[current.word]}
-              />
-            </div>
-            {!flipped && current.ipa && (
-              <div className="mt-1 text-base text-muted-foreground">[ {current.ipa} ]</div>
-            )}
-            {flipped && (
-              <div className="mt-1 text-sm text-muted-foreground">
-                {current.word}
+          <div className="pb-5 pt-1 px-4">
+            <div className="flex items-start justify-between gap-4">
+              <div className="text-left">
+                <div className={`${FONT_SIZE_LEVELS[Math.min(fontSize + 1, FONT_SIZE_LEVELS.length - 1)].class} font-semibold text-foreground`}>
+                  <RubyText
+                    text={flipped ? translations[current.word] ?? current.word : current.word}
+                    pinyin={flipped ? translationPinyin[current.word] : sourcePinyin[current.word]}
+                  />
+                </div>
+                {!flipped && current.ipa && (
+                  <div className="mt-1 text-base text-muted-foreground">[ {current.ipa} ]</div>
+                )}
+                {flipped && (
+                  <div className="mt-1 text-sm text-muted-foreground">
+                    {current.word}
+                  </div>
+                )}
               </div>
-            )}
+              {!flipped && translations[current.word] && (
+                <div className="text-right">
+                  <div className={`${FONT_SIZE_LEVELS[Math.max(fontSize - 1, 0)].class} font-medium text-primary`}>
+                    {translations[current.word]}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="mb-4 flex items-center justify-center gap-3">
