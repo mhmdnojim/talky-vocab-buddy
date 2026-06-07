@@ -210,8 +210,11 @@ function Learn() {
             setTranslationPinyin({ ...tpMap });
           }
         }
-      } catch {
-        /* ignore */
+      } catch (e) {
+        if (!cancelled && isCreditError(e)) {
+          setOutOfCredits(true);
+          toast.error(describeAIError(e));
+        }
       } finally {
         if (!cancelled) setTranslating(false);
       }
