@@ -185,19 +185,25 @@ function Learn() {
     (async () => {
       try {
         const wordsList = words.map((w) => w.word);
-        const res = await translate({ data: { words: wordsList, targetLang } });
-        if (cancelled) return;
+        const BATCH = 50;
         const tMap: Record<string, string> = {};
         const spMap: Record<string, string[] | null> = {};
         const tpMap: Record<string, string[] | null> = {};
-        wordsList.forEach((w, i) => {
-          if (res.translations[i]) tMap[w] = res.translations[i];
-          spMap[w] = res.sourcePinyin?.[i] ?? null;
-          tpMap[w] = res.translationPinyin?.[i] ?? null;
-        });
-        setTranslations(tMap);
-        setSourcePinyin(spMap);
-        setTranslationPinyin(tpMap);
+        for (let start = 0; start < wordsList.length; start += BATCH) {
+          if (cancelled) return;
+          const chunk = wordsList.slice(start, start + BATCH);
+          const res = await translate({ data: { words: chunk, targetLang } });
+          chunk.forEach((w, i) => {
+            if (res.translations[i]) tMap[w] = res.translations[i];
+            spMap[w] = res.sourcePinyin?.[i] ?? null;
+            tpMap[w] = res.translationPinyin?.[i] ?? null;
+          });
+          if (!cancelled) {
+            setTranslations({ ...tMap });
+            setSourcePinyin({ ...spMap });
+            setTranslationPinyin({ ...tpMap });
+          }
+        }
       } catch {
         /* ignore */
       } finally {
