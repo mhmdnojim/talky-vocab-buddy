@@ -25,6 +25,18 @@ import { getCategoryBySlug, listWords, updateWordImage, listCategories, type Cus
 import { generateVocabImage, translateWords, IMAGE_STYLES, type ImageStyle } from "@/lib/vocab.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { RubyText } from "@/components/RubyText";
+import { toast } from "sonner";
+
+function describeImageError(e: unknown): string {
+  const msg = e instanceof Error ? e.message : String(e);
+  if (msg.includes("402") || msg.toLowerCase().includes("not enough credits") || msg.toLowerCase().includes("payment_required")) {
+    return "Out of AI credits. Add credits in your workspace billing to generate more images.";
+  }
+  if (msg.includes("429") || msg.toLowerCase().includes("rate")) {
+    return "Rate limited. Please wait a moment and try again.";
+  }
+  return `Image generation failed: ${msg}`;
+}
 
 const LANGUAGES = [
   "Arabic", "Spanish", "French", "German", "Italian", "Portuguese",
