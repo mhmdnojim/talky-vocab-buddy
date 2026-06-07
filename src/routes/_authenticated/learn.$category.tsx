@@ -665,10 +665,10 @@ function Learn() {
               <img
                 src={current.image}
                 alt={`${current.word} illustration`}
-                className="max-h-[40vh] w-full object-contain"
+                className="max-h-[35vh] w-full object-contain"
               />
             ) : (
-              <div className="flex h-[40vh] w-full items-center justify-center bg-muted text-6xl">
+              <div className="flex h-[35vh] w-full items-center justify-center bg-muted text-6xl">
                 ✨
               </div>
             )}
@@ -689,23 +689,48 @@ function Learn() {
             </button>
           </div>
 
-        </div>
-
-        <VoiceControls
-          word={flipped ? translations[current.word] ?? current.word : current.word}
-          lang={flipped ? langLabelToBcp47(targetLang) : undefined}
-        />
-
-        <div className="mt-8 text-center">
-          <div className={`${FONT_SIZE_LEVELS[Math.min(fontSize + 1, FONT_SIZE_LEVELS.length - 1)].class} font-semibold text-foreground`}>
-            <RubyText
-              text={flipped ? translations[current.word] ?? current.word : current.word}
-              pinyin={flipped ? translationPinyin[current.word] : sourcePinyin[current.word]}
-            />
+          <div className="pb-5 pt-1 text-center">
+            <div className={`${FONT_SIZE_LEVELS[Math.min(fontSize + 1, FONT_SIZE_LEVELS.length - 1)].class} font-semibold text-foreground`}>
+              <RubyText
+                text={flipped ? translations[current.word] ?? current.word : current.word}
+                pinyin={flipped ? translationPinyin[current.word] : sourcePinyin[current.word]}
+              />
+            </div>
+            {!flipped && current.ipa && (
+              <div className="mt-1 text-base text-muted-foreground">[ {current.ipa} ]</div>
+            )}
+            {flipped && (
+              <div className="mt-1 text-sm text-muted-foreground">
+                {current.word}
+              </div>
+            )}
           </div>
-          {!flipped && current.ipa && (
-            <div className="mt-2 text-base text-muted-foreground">[ {current.ipa} ]</div>
-          )}
+
+          <div className="mb-4 flex items-center justify-center gap-3">
+            <button
+              onClick={() => void speak(flipped ? translations[current.word] ?? current.word : current.word, flipped ? { lang: langLabelToBcp47(targetLang) } : undefined)}
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-muted shadow-sm"
+              aria-label="Play pronunciation"
+            >
+              <Volume2 className="h-5 w-5 text-primary" />
+            </button>
+            <button
+              onClick={() => void speak(flipped ? translations[current.word] ?? current.word : current.word, { slow: true, lang: flipped ? langLabelToBcp47(targetLang) : undefined })}
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-muted shadow-sm"
+              aria-label="Play slowly"
+            >
+              <Snail className="h-5 w-5 text-primary" />
+            </button>
+            <button
+              onClick={() => {
+                // quick record toggle placeholder
+              }}
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-muted shadow-sm"
+              aria-label="Practice pronunciation"
+            >
+              <Mic className="h-5 w-5 text-primary" />
+            </button>
+          </div>
         </div>
 
       </main>
