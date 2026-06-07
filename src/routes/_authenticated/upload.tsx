@@ -648,6 +648,16 @@ function UploadPage() {
                   className="hidden"
                 />
               </label>
+              <div className="mt-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-foreground">
+                <p className="font-semibold">Excel / CSV column order (required):</p>
+                <ol className="mt-1 list-decimal pl-4 text-muted-foreground">
+                  <li><span className="font-medium text-foreground">word</span> — the vocabulary word</li>
+                  <li><span className="font-medium text-foreground">pinyin</span> — pronunciation</li>
+                  <li><span className="font-medium text-foreground">translation</span> — meaning</li>
+                  <li><span className="font-medium text-foreground">example</span> — example sentence</li>
+                </ol>
+                <p className="mt-1 text-muted-foreground">First row may be headers; columns must appear in this exact order.</p>
+              </div>
             </div>
           )}
 
