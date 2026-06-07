@@ -106,6 +106,7 @@ function UploadPage() {
 
   const [phase, setPhase] = useState<Phase>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [outOfCredits, setOutOfCredits] = useState(false);
   const [log, setLog] = useState<string[]>([]);
   const [progress, setProgress] = useState<WordProgress[]>([]);
   const [extractProgress, setExtractProgress] = useState({ done: 0, total: 0 });
@@ -239,7 +240,13 @@ function UploadPage() {
             pushUnique(res.words);
             addLog(`✅ Chunk ${i + 1}: +${words.length - before} (total ${words.length})`);
           } catch (err: any) {
-            addLog(`⚠️ Chunk ${i + 1} failed: ${err?.message ?? "error"}`);
+            const msg = err?.message ?? "";
+            if (msg.toLowerCase().includes("credits exhausted")) {
+              setOutOfCredits(true);
+              addLog(`⚠️ Chunk ${i + 1} failed: AI credits exhausted`);
+            } else {
+              addLog(`⚠️ Chunk ${i + 1} failed: ${msg ?? "error"}`);
+            }
           }
           setExtractProgress({ done: i + 1, total: textChunks.length });
         }
@@ -260,7 +267,13 @@ function UploadPage() {
             pushUnique(res.words);
             addLog(`✅ Call ${i + 1}: +${words.length - before} (total ${words.length})`);
           } catch (err: any) {
-            addLog(`⚠️ Call ${i + 1} failed: ${err?.message ?? "error"}`);
+            const msg = err?.message ?? "";
+            if (msg.toLowerCase().includes("credits exhausted")) {
+              setOutOfCredits(true);
+              addLog(`⚠️ Call ${i + 1} failed: AI credits exhausted`);
+            } else {
+              addLog(`⚠️ Call ${i + 1} failed: ${msg ?? "error"}`);
+            }
           }
           setExtractProgress({ done: i + 1, total: numCalls });
         }
