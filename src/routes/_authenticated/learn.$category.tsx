@@ -689,23 +689,6 @@ function Learn() {
             </button>
           </div>
 
-          <div className="flex items-center gap-3 px-5 py-4">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
-              <span className="text-sm">👤</span>
-            </div>
-            <RubyText
-              text={flipped ? translations[current.word] ?? current.word : current.word}
-              pinyin={flipped ? translationPinyin[current.word] : sourcePinyin[current.word]}
-              className={`${FONT_SIZE_LEVELS[fontSize].class} font-medium leading-tight`}
-            />
-            {translations[current.word] && (
-              <RubyText
-                text={flipped ? current.word : translations[current.word]}
-                pinyin={flipped ? sourcePinyin[current.word] : translationPinyin[current.word]}
-                className={`ml-auto ${FONT_SIZE_LEVELS[fontSize].class} font-medium leading-tight text-foreground`}
-              />
-            )}
-          </div>
         </div>
 
         <VoiceControls
