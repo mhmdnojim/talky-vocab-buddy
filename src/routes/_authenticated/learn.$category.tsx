@@ -27,15 +27,20 @@ import { useServerFn } from "@tanstack/react-start";
 import { RubyText } from "@/components/RubyText";
 import { toast } from "sonner";
 
-function describeImageError(e: unknown): string {
+function isCreditError(e: unknown): boolean {
   const msg = e instanceof Error ? e.message : String(e);
-  if (msg.includes("402") || msg.toLowerCase().includes("not enough credits") || msg.toLowerCase().includes("payment_required")) {
-    return "Out of AI credits. Add credits in your workspace billing to generate more images.";
+  return msg.toLowerCase().includes("credits exhausted") || msg.includes("402");
+}
+
+function describeAIError(e: unknown): string {
+  const msg = e instanceof Error ? e.message : String(e);
+  if (msg.toLowerCase().includes("credits exhausted")) {
+    return msg; // already user-friendly from server
   }
-  if (msg.includes("429") || msg.toLowerCase().includes("rate")) {
-    return "Rate limited. Please wait a moment and try again.";
+  if (msg.includes("429") || msg.toLowerCase().includes("rate limit")) {
+    return "AI rate limit reached. Please wait a moment and try again.";
   }
-  return `Image generation failed: ${msg}`;
+  return msg;
 }
 
 const LANGUAGES = [
