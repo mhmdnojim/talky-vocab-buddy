@@ -143,6 +143,7 @@ function Learn() {
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [reloadKey, setReloadKey] = useState(0);
   const autoplayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [outOfCredits, setOutOfCredits] = useState(false);
 
   const [targetLang, setTargetLang] = useState<string>(() => {
     if (typeof window === "undefined") return "Arabic";
@@ -250,7 +251,8 @@ function Learn() {
       }
     } catch (e) {
       console.error(e);
-      toast.error(describeImageError(e));
+      if (isCreditError(e)) setOutOfCredits(true);
+      toast.error(describeAIError(e));
     } finally {
       setRegenerating(false);
     }
@@ -288,9 +290,9 @@ function Learn() {
         }
       } catch (e) {
         console.error("batch image failed", cur.word, e);
-        const msg = e instanceof Error ? e.message : String(e);
-        if (msg.includes("402") || msg.toLowerCase().includes("not enough credits")) {
-          toast.error("Out of AI credits — stopping batch. Add credits to continue.");
+        if (isCreditError(e)) {
+          setOutOfCredits(true);
+          toast.error("AI credits exhausted — stopping. Add credits in your workspace billing to continue.");
           batchCancelRef.current = true;
         }
       }
