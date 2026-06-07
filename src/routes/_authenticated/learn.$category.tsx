@@ -277,6 +277,11 @@ function Learn() {
         }
       } catch (e) {
         console.error("batch image failed", cur.word, e);
+        const msg = e instanceof Error ? e.message : String(e);
+        if (msg.includes("402") || msg.toLowerCase().includes("not enough credits")) {
+          toast.error("Out of AI credits — stopping batch. Add credits to continue.");
+          batchCancelRef.current = true;
+        }
       }
       setBatchGen({ done: k + 1, total: targets.length });
     }
