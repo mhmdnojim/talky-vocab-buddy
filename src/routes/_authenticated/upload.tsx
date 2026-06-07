@@ -351,8 +351,9 @@ function UploadPage() {
             const { dataUrl } = await imageFn({ data: { word: row.word, style: imageStyle } });
             await updateWordImage(row.id, dataUrl);
             updateWord(i, { image: "done" });
-          } catch (err) {
+          } catch (err: any) {
             console.error("image failed", row.word, err);
+            if (err?.message?.toLowerCase().includes("credits exhausted")) setOutOfCredits(true);
             updateWord(i, { image: "failed" });
           }
           if (cancelRef.current) break;
