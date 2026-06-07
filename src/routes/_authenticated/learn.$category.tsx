@@ -577,6 +577,13 @@ function Learn() {
         </div>
       </header>
 
+      {outOfCredits && (
+        <div className="shrink-0 border-b border-amber-200 bg-amber-50 px-4 py-2 text-center text-sm text-amber-900">
+          <span className="font-semibold">AI credits exhausted.</span>{" "}
+          Add credits in your workspace billing to continue using image generation and translations.
+        </div>
+      )}
+
       <main className="mx-auto flex w-full max-w-xl min-h-0 flex-1 flex-col overflow-hidden px-3 pb-3 pt-3">
         {words.length > patchSize && (
           <PatchTabs
