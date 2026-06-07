@@ -383,7 +383,8 @@ function UploadPage() {
             } else {
               updateWord(i, { example: "failed" });
             }
-          } catch {
+          } catch (err: any) {
+            if (err?.message?.toLowerCase().includes("credits exhausted")) setOutOfCredits(true);
             updateWord(i, { example: "failed" });
           }
         }
