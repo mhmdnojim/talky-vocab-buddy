@@ -239,6 +239,7 @@ function Learn() {
       }
     } catch (e) {
       console.error(e);
+      toast.error(describeImageError(e));
     } finally {
       setRegenerating(false);
     }
