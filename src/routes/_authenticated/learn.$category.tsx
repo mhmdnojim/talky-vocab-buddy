@@ -27,15 +27,20 @@ import { useServerFn } from "@tanstack/react-start";
 import { RubyText } from "@/components/RubyText";
 import { toast } from "sonner";
 
-function describeImageError(e: unknown): string {
+function isCreditError(e: unknown): boolean {
   const msg = e instanceof Error ? e.message : String(e);
-  if (msg.includes("402") || msg.toLowerCase().includes("not enough credits") || msg.toLowerCase().includes("payment_required")) {
-    return "Out of AI credits. Add credits in your workspace billing to generate more images.";
+  return msg.toLowerCase().includes("credits exhausted") || msg.includes("402");
+}
+
+function describeAIError(e: unknown): string {
+  const msg = e instanceof Error ? e.message : String(e);
+  if (msg.toLowerCase().includes("credits exhausted")) {
+    return msg; // already user-friendly from server
   }
-  if (msg.includes("429") || msg.toLowerCase().includes("rate")) {
-    return "Rate limited. Please wait a moment and try again.";
+  if (msg.includes("429") || msg.toLowerCase().includes("rate limit")) {
+    return "AI rate limit reached. Please wait a moment and try again.";
   }
-  return `Image generation failed: ${msg}`;
+  return msg;
 }
 
 const LANGUAGES = [
@@ -138,6 +143,7 @@ function Learn() {
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [reloadKey, setReloadKey] = useState(0);
   const autoplayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [outOfCredits, setOutOfCredits] = useState(false);
 
   const [targetLang, setTargetLang] = useState<string>(() => {
     if (typeof window === "undefined") return "Arabic";
@@ -204,8 +210,11 @@ function Learn() {
             setTranslationPinyin({ ...tpMap });
           }
         }
-      } catch {
-        /* ignore */
+      } catch (e) {
+        if (!cancelled && isCreditError(e)) {
+          setOutOfCredits(true);
+          toast.error(describeAIError(e));
+        }
       } finally {
         if (!cancelled) setTranslating(false);
       }
@@ -245,7 +254,8 @@ function Learn() {
       }
     } catch (e) {
       console.error(e);
-      toast.error(describeImageError(e));
+      if (isCreditError(e)) setOutOfCredits(true);
+      toast.error(describeAIError(e));
     } finally {
       setRegenerating(false);
     }
@@ -283,9 +293,9 @@ function Learn() {
         }
       } catch (e) {
         console.error("batch image failed", cur.word, e);
-        const msg = e instanceof Error ? e.message : String(e);
-        if (msg.includes("402") || msg.toLowerCase().includes("not enough credits")) {
-          toast.error("Out of AI credits — stopping batch. Add credits to continue.");
+        if (isCreditError(e)) {
+          setOutOfCredits(true);
+          toast.error("AI credits exhausted — stopping. Add credits in your workspace billing to continue.");
           batchCancelRef.current = true;
         }
       }
@@ -566,6 +576,13 @@ function Learn() {
           </div>
         </div>
       </header>
+
+      {outOfCredits && (
+        <div className="shrink-0 border-b border-amber-200 bg-amber-50 px-4 py-2 text-center text-sm text-amber-900">
+          <span className="font-semibold">AI credits exhausted.</span>{" "}
+          Add credits in your workspace billing to continue using image generation and translations.
+        </div>
+      )}
 
       <main className="mx-auto flex w-full max-w-xl min-h-0 flex-1 flex-col overflow-hidden px-3 pb-3 pt-3">
         {words.length > patchSize && (

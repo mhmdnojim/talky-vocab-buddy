@@ -106,6 +106,7 @@ function UploadPage() {
 
   const [phase, setPhase] = useState<Phase>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [outOfCredits, setOutOfCredits] = useState(false);
   const [log, setLog] = useState<string[]>([]);
   const [progress, setProgress] = useState<WordProgress[]>([]);
   const [extractProgress, setExtractProgress] = useState({ done: 0, total: 0 });
@@ -239,7 +240,13 @@ function UploadPage() {
             pushUnique(res.words);
             addLog(`✅ Chunk ${i + 1}: +${words.length - before} (total ${words.length})`);
           } catch (err: any) {
-            addLog(`⚠️ Chunk ${i + 1} failed: ${err?.message ?? "error"}`);
+            const msg = err?.message ?? "";
+            if (msg.toLowerCase().includes("credits exhausted")) {
+              setOutOfCredits(true);
+              addLog(`⚠️ Chunk ${i + 1} failed: AI credits exhausted`);
+            } else {
+              addLog(`⚠️ Chunk ${i + 1} failed: ${msg ?? "error"}`);
+            }
           }
           setExtractProgress({ done: i + 1, total: textChunks.length });
         }
@@ -260,7 +267,13 @@ function UploadPage() {
             pushUnique(res.words);
             addLog(`✅ Call ${i + 1}: +${words.length - before} (total ${words.length})`);
           } catch (err: any) {
-            addLog(`⚠️ Call ${i + 1} failed: ${err?.message ?? "error"}`);
+            const msg = err?.message ?? "";
+            if (msg.toLowerCase().includes("credits exhausted")) {
+              setOutOfCredits(true);
+              addLog(`⚠️ Call ${i + 1} failed: AI credits exhausted`);
+            } else {
+              addLog(`⚠️ Call ${i + 1} failed: ${msg ?? "error"}`);
+            }
           }
           setExtractProgress({ done: i + 1, total: numCalls });
         }
@@ -338,8 +351,9 @@ function UploadPage() {
             const { dataUrl } = await imageFn({ data: { word: row.word, style: imageStyle } });
             await updateWordImage(row.id, dataUrl);
             updateWord(i, { image: "done" });
-          } catch (err) {
+          } catch (err: any) {
             console.error("image failed", row.word, err);
+            if (err?.message?.toLowerCase().includes("credits exhausted")) setOutOfCredits(true);
             updateWord(i, { image: "failed" });
           }
           if (cancelRef.current) break;
@@ -369,7 +383,8 @@ function UploadPage() {
             } else {
               updateWord(i, { example: "failed" });
             }
-          } catch {
+          } catch (err: any) {
+            if (err?.message?.toLowerCase().includes("credits exhausted")) setOutOfCredits(true);
             updateWord(i, { example: "failed" });
           }
         }
@@ -408,6 +423,14 @@ function UploadPage() {
         </Link>
         <h1 className="text-lg font-semibold">Add Category</h1>
       </header>
+
+      {outOfCredits && (
+        <div className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-center text-sm text-amber-900">
+          <span className="font-semibold">AI credits exhausted.</span>{" "}
+          Add credits in your workspace billing to continue using AI extraction and image generation.
+        </div>
+      )}
+
       {atCategoryLimit && (
         <div className="mx-auto mt-4 max-w-xl rounded-lg border-2 border-orange-300 bg-orange-50 px-3 py-2 text-sm text-orange-800">
           <Lock className="mr-1 inline h-4 w-4" />

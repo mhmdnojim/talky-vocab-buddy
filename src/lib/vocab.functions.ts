@@ -88,6 +88,12 @@ async function callLovableAI(body: unknown): Promise<any> {
   });
   if (!res.ok) {
     const t = await res.text().catch(() => "");
+    if (res.status === 402 || t.toLowerCase().includes("not enough credits") || t.toLowerCase().includes("payment_required")) {
+      throw new Error("AI credits exhausted. Please add credits in your workspace billing to continue using AI features.");
+    }
+    if (res.status === 429) {
+      throw new Error("AI rate limit reached. Please wait a moment and try again.");
+    }
     throw new Error(`AI gateway ${res.status}: ${t}`);
   }
   return res.json();
@@ -228,6 +234,12 @@ export const generateVocabImage = createServerFn({ method: "POST" })
     });
     if (!res.ok) {
       const t = await res.text().catch(() => "");
+      if (res.status === 402 || t.toLowerCase().includes("not enough credits") || t.toLowerCase().includes("payment_required")) {
+        throw new Error("AI credits exhausted. Please add credits in your workspace billing to continue using AI features.");
+      }
+      if (res.status === 429) {
+        throw new Error("AI rate limit reached. Please wait a moment and try again.");
+      }
       throw new Error(`Image gen ${res.status}: ${t}`);
     }
     const json = await res.json();
