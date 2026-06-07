@@ -706,35 +706,6 @@ function Learn() {
           {!flipped && current.ipa && (
             <div className="mt-2 text-base text-muted-foreground">[ {current.ipa} ]</div>
           )}
-          <div
-            className="mt-1 flex min-h-[1.75rem] items-center justify-center gap-2 text-sm text-muted-foreground"
-            dir="auto"
-          >
-            {translations[current.word] ? (
-              <>
-                <RubyText
-                  text={flipped ? current.word : translations[current.word]}
-                  pinyin={flipped ? sourcePinyin[current.word] : translationPinyin[current.word]}
-                />
-                <button
-                  type="button"
-                  onClick={() =>
-                    void speak(flipped ? current.word : translations[current.word], {
-                      lang: flipped ? undefined : langLabelToBcp47(targetLang),
-                    })
-                  }
-                  className="flex h-7 w-7 items-center justify-center rounded-full bg-card text-primary shadow-sm transition hover:bg-muted"
-                  aria-label={`Play ${flipped ? "original" : targetLang}`}
-                >
-                  <Volume2 className="h-3.5 w-3.5" />
-                </button>
-              </>
-            ) : translating ? (
-              "…"
-            ) : (
-              ""
-            )}
-          </div>
         </div>
 
       </main>
