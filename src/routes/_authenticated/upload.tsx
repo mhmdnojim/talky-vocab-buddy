@@ -421,6 +421,14 @@ function UploadPage() {
         </Link>
         <h1 className="text-lg font-semibold">Add Category</h1>
       </header>
+
+      {outOfCredits && (
+        <div className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-center text-sm text-amber-900">
+          <span className="font-semibold">AI credits exhausted.</span>{" "}
+          Add credits in your workspace billing to continue using AI extraction and image generation.
+        </div>
+      )}
+
       {atCategoryLimit && (
         <div className="mx-auto mt-4 max-w-xl rounded-lg border-2 border-orange-300 bg-orange-50 px-3 py-2 text-sm text-orange-800">
           <Lock className="mr-1 inline h-4 w-4" />
