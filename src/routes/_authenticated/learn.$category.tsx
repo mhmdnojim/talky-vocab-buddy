@@ -199,6 +199,13 @@ function Learn() {
           if (cancelled) return;
           const chunk = wordsList.slice(start, start + BATCH);
           const res = await translate({ data: { words: chunk, targetLang } });
+          if (res.error) {
+            if (!cancelled) {
+              if (isCreditError(res.error)) setOutOfCredits(true);
+              toast.error(describeAIError(res.error));
+            }
+            break;
+          }
           chunk.forEach((w, i) => {
             if (res.translations[i]) tMap[w] = res.translations[i];
             spMap[w] = res.sourcePinyin?.[i] ?? null;
