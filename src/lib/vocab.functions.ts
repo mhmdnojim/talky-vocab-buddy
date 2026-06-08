@@ -15,6 +15,13 @@ const TranslateInput = z.object({
 export const translateWords = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => TranslateInput.parse(input))
   .handler(async ({ data }) => {
+    const empty = (msg: string) => ({
+      sourceLang: "Unknown",
+      translations: data.words.map(() => ""),
+      sourcePinyin: data.words.map(() => null as string[] | null),
+      translationPinyin: data.words.map(() => null as string[] | null),
+      error: msg,
+    });
     const list = data.words.map((w, i) => `${i + 1}. ${w}`).join("\n");
     const prompt = `Detect the source language, then translate each item to ${data.targetLang}. Keep translations short (1-4 words). Do not add notes.
 
@@ -32,14 +39,19 @@ Keep the items array in the SAME order as ITEMS.
 
 ITEMS:
 ${list}`;
-    const result = await callLovableAI({
-      model: "google/gemini-2.5-flash",
-      messages: [
-        { role: "system", content: "You output only valid JSON. No prose." },
-        { role: "user", content: prompt },
-      ],
-      response_format: { type: "json_object" },
-    });
+    let result: any;
+    try {
+      result = await callLovableAI({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: "You output only valid JSON. No prose." },
+          { role: "user", content: prompt },
+        ],
+        response_format: { type: "json_object" },
+      });
+    } catch (e) {
+      return empty(e instanceof Error ? e.message : String(e));
+    }
     const content = result?.choices?.[0]?.message?.content ?? "{}";
     let parsed: {
       sourceLang?: string;
@@ -71,6 +83,7 @@ ${list}`;
       translations,
       sourcePinyin,
       translationPinyin,
+      error: null as string | null,
     };
   });
 
