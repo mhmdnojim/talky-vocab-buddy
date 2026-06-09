@@ -190,6 +190,12 @@ function Home() {
                 )}
               </div>
               <Link
+                to="/bulk-import"
+                className="flex items-center gap-1 rounded-full border border-primary/30 bg-background px-3 py-1.5 text-xs font-semibold text-primary shadow-sm hover:bg-primary/5"
+              >
+                <Plus className="h-3.5 w-3.5" /> Bulk import
+              </Link>
+              <Link
                 to="/upload"
                 className="flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
               >
