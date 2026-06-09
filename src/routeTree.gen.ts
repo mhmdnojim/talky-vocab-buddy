@@ -21,6 +21,7 @@ import { Route as SitemapXmlRouteImport } from './routes/sitemap.xml'
 import { Route as ApiTtsRouteImport } from './routes/api/tts'
 import { Route as AuthenticatedUploadProgressRouteImport } from './routes/_authenticated/upload-progress'
 import { Route as AuthenticatedUploadRouteImport } from './routes/_authenticated/upload'
+import { Route as AuthenticatedBulkImportRouteImport } from './routes/_authenticated/bulk-import'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
 import { Route as AuthenticatedLearnCategoryRouteImport } from './routes/_authenticated/learn.$category'
@@ -86,6 +87,11 @@ const AuthenticatedUploadRoute = AuthenticatedUploadRouteImport.update({
   path: '/upload',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedBulkImportRoute = AuthenticatedBulkImportRouteImport.update({
+  id: '/bulk-import',
+  path: '/bulk-import',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -119,6 +125,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/account': typeof AuthenticatedAccountRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/bulk-import': typeof AuthenticatedBulkImportRoute
   '/upload': typeof AuthenticatedUploadRoute
   '/upload-progress': typeof AuthenticatedUploadProgressRoute
   '/api/tts': typeof ApiTtsRoute
@@ -136,6 +143,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/account': typeof AuthenticatedAccountRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/bulk-import': typeof AuthenticatedBulkImportRoute
   '/upload': typeof AuthenticatedUploadRoute
   '/upload-progress': typeof AuthenticatedUploadProgressRoute
   '/api/tts': typeof ApiTtsRoute
@@ -155,6 +163,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/bulk-import': typeof AuthenticatedBulkImportRoute
   '/_authenticated/upload': typeof AuthenticatedUploadRoute
   '/_authenticated/upload-progress': typeof AuthenticatedUploadProgressRoute
   '/api/tts': typeof ApiTtsRoute
@@ -174,6 +183,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/account'
     | '/admin'
+    | '/bulk-import'
     | '/upload'
     | '/upload-progress'
     | '/api/tts'
@@ -191,6 +201,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/account'
     | '/admin'
+    | '/bulk-import'
     | '/upload'
     | '/upload-progress'
     | '/api/tts'
@@ -209,6 +220,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/_authenticated/account'
     | '/_authenticated/admin'
+    | '/_authenticated/bulk-import'
     | '/_authenticated/upload'
     | '/_authenticated/upload-progress'
     | '/api/tts'
@@ -317,6 +329,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedUploadRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/bulk-import': {
+      id: '/_authenticated/bulk-import'
+      path: '/bulk-import'
+      fullPath: '/bulk-import'
+      preLoaderRoute: typeof AuthenticatedBulkImportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
       path: '/admin'
@@ -351,6 +370,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedBulkImportRoute: typeof AuthenticatedBulkImportRoute
   AuthenticatedUploadRoute: typeof AuthenticatedUploadRoute
   AuthenticatedUploadProgressRoute: typeof AuthenticatedUploadProgressRoute
   AuthenticatedLearnCategoryRoute: typeof AuthenticatedLearnCategoryRoute
@@ -359,6 +379,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAccountRoute: AuthenticatedAccountRoute,
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedBulkImportRoute: AuthenticatedBulkImportRoute,
   AuthenticatedUploadRoute: AuthenticatedUploadRoute,
   AuthenticatedUploadProgressRoute: AuthenticatedUploadProgressRoute,
   AuthenticatedLearnCategoryRoute: AuthenticatedLearnCategoryRoute,
